@@ -1,5 +1,5 @@
 // fast-tiny-tts Service Worker - Auto-updating offline cache
-const CACHE_NAME = 'fast-tiny-tts-v7';
+const CACHE_NAME = 'fast-tiny-tts-v8';
 
 // Static assets to pre-cache
 const PRECACHE_ASSETS = [
@@ -7,11 +7,6 @@ const PRECACHE_ASSETS = [
   './index.html',
   './favicon.svg',
   './dist/web/fast-tiny-tts.js',
-  './dist/onnxruntime-web/ort.all.min.mjs',
-  './dist/onnxruntime-web/ort-wasm-simd-threaded.wasm',
-  './dist/onnxruntime-web/ort-wasm-simd-threaded.mjs',
-  './dist/onnxruntime-web/ort-wasm-simd-threaded.jsep.wasm',
-  './dist/onnxruntime-web/ort-wasm-simd-threaded.jsep.mjs',
   './dist/models/tiny-voca/model.onnx',
   './dist/models/tiny-voca/config.json',
   './dist/models/tiny-voca/phonemizer/lexicon.tsv',

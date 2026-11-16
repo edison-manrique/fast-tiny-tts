@@ -75,8 +75,12 @@ class FastTinyTTS extends TinyVocaCore implements TinyVocaInstance {
       ? new URL(config.phonemizerPath, loc).href 
       : modelDir + 'phonemizer/lexicon.tsv';
 
-    const rawWasmPath = config.wasmPath ?? 'dist/onnxruntime-web/';
-    const wasmUrl = new URL(rawWasmPath, loc).href;
+    const isStatic = loc.includes('github.io') || loc.startsWith('file:');
+    const defaultWasm = isStatic
+      ? 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.20.0/dist/'
+      : 'dist/onnxruntime-web/';
+    const rawWasmPath = config.wasmPath ?? defaultWasm;
+    const wasmUrl = rawWasmPath.startsWith('http') ? rawWasmPath : new URL(rawWasmPath, loc).href;
     const localWasmPath = wasmUrl.endsWith('/') ? wasmUrl : wasmUrl + '/';
     
     if (ort.env && ort.env.wasm) {

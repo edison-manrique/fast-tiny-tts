@@ -16,7 +16,7 @@
   <script type="importmap">
   {
     "imports": {
-      "onnxruntime-web": "./dist/onnxruntime-web/ort.all.min.mjs"
+      "onnxruntime-web": "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.20.0/dist/ort.all.min.mjs"
     }
   }
   </script>
@@ -1275,7 +1275,7 @@
           modelPath: './dist/models/tiny-voca/model.onnx',
           phonemizerPath: './dist/models/tiny-voca/phonemizer/lexicon.tsv',
           configPath: './dist/models/tiny-voca/config.json',
-          wasmPath: './dist/onnxruntime-web/',
+          wasmPath: isStaticHost ? 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.20.0/dist/' : './dist/onnxruntime-web/',
         });
         state.webLoading = false;
         els.statusBadge.className = 'status-badge';
