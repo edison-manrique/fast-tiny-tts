@@ -207,7 +207,11 @@ function normalizeTextForSpeech(text: string): string {
     return `${intPart} point ${decWords}`;
   });
 
-  // 7. TTS variants: TTS, tts, Tts, t.t.s., tiny-tts, fast-tiny-tts
+  // 7. Quarters: Q1, Q2, Q3, Q4, 1Q, 2Q, 3Q, 4Q
+  t = t.replace(/\b[Qq]([1-4])\b/g, 'Q $1');
+  t = t.replace(/\b([1-4])[Qq]\b/g, '$1 Q');
+
+  // 8. TTS variants: TTS, tts, Tts, t.t.s., tiny-tts, fast-tiny-tts
   t = t.replace(/\bt\.t\.s\.?\b/gi, ' T T S ');
   t = t.replace(/\b(?:fast-?)?(?:tiny-?)?tts\b/gi, (m) => {
     const lower = m.toLowerCase();
@@ -217,7 +221,7 @@ function normalizeTextForSpeech(text: string): string {
     return ' T T S ';
   });
 
-  // 8. Common technical acronyms & abbreviations (case-insensitive for acronyms)
+  // 9. Common technical acronyms & abbreviations (case-insensitive for acronyms)
   const ACRONYMS: Record<string, string> = {
     'TTS': 'T T S',
     'AI': 'A I',
@@ -478,6 +482,23 @@ export class Phonemizer {
         stress: [STRESS_PRIMARY, STRESS_PRIMARY, STRESS_NONE, STRESS_NONE],
       });
     }
+    // Quarters
+    this.lexicon.set('q1', {
+      symbols: ['k', 'j', 'uː', 'w', 'ʌ', 'n'],
+      stress: [STRESS_PRIMARY, STRESS_PRIMARY, STRESS_PRIMARY, STRESS_PRIMARY, STRESS_PRIMARY, STRESS_PRIMARY],
+    });
+    this.lexicon.set('q2', {
+      symbols: ['k', 'j', 'uː', 't', 'uː'],
+      stress: [STRESS_PRIMARY, STRESS_PRIMARY, STRESS_PRIMARY, STRESS_PRIMARY, STRESS_PRIMARY],
+    });
+    this.lexicon.set('q3', {
+      symbols: ['k', 'j', 'uː', 'θ', 'ɹ', 'iː'],
+      stress: [STRESS_PRIMARY, STRESS_PRIMARY, STRESS_PRIMARY, STRESS_PRIMARY, STRESS_PRIMARY, STRESS_PRIMARY],
+    });
+    this.lexicon.set('q4', {
+      symbols: ['k', 'j', 'uː', 'f', 'oːɹ'],
+      stress: [STRESS_PRIMARY, STRESS_PRIMARY, STRESS_PRIMARY, STRESS_PRIMARY, STRESS_PRIMARY],
+    });
   }
 
   static fromTsv(lexiconTsv: string, vocab: Record<string, number>): Phonemizer {
