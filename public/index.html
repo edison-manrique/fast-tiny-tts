@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>fast-tiny-tts · Ultra-fast TTS Studio</title>
   <meta name="description" content="Ultra-compact English TTS running locally via Bun or client-side via ONNX Runtime Web" />
-  <meta name="theme-color" content="#07080e" />
+  <meta name="theme-color" content="#06070b" />
 
   <!-- Favicon -->
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%238b5cf6'/%3E%3Cstop offset='100%25' stop-color='%2306b6d4'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='8' fill='url(%23g)'/%3E%3Cpath d='M12 9l11 7-11 7V9z' fill='%23ffffff'/%3E%3Ccircle cx='24' cy='9' r='2.5' fill='%2310b981'/%3E%3C/svg%3E" />
@@ -38,23 +38,23 @@
 
   <style>
     :root {
-      --bg: #07080e;
-      --bg-surface: #0d0f18;
-      --bg-card: rgba(14, 17, 28, 0.78);
-      --bg-card-hover: rgba(20, 25, 42, 0.88);
+      --bg: #06070b;
+      --bg-surface: #0b0d14;
+      --bg-card: rgba(13, 16, 26, 0.82);
+      --bg-card-hover: rgba(18, 23, 38, 0.92);
       --border: rgba(255, 255, 255, 0.08);
-      --border-focus: rgba(139, 92, 246, 0.6);
-      --border-hover: rgba(255, 255, 255, 0.16);
+      --border-focus: rgba(139, 92, 246, 0.65);
+      --border-hover: rgba(255, 255, 255, 0.18);
       --fg: #f8fafc;
       --fg-muted: #94a3b8;
       --fg-subtle: #475569;
       --primary: #8b5cf6;
       --primary-light: #a78bfa;
-      --primary-glow: rgba(139, 92, 246, 0.35);
+      --primary-glow: rgba(139, 92, 246, 0.38);
       --secondary: #06b6d4;
-      --secondary-glow: rgba(6, 182, 212, 0.3);
+      --secondary-glow: rgba(6, 182, 212, 0.32);
       --accent: #10b981;
-      --accent-glow: rgba(16, 185, 129, 0.3);
+      --accent-glow: rgba(16, 185, 129, 0.32);
       --danger: #f43f5e;
       --radius: 12px;
       --radius-sm: 8px;
@@ -80,14 +80,14 @@
     /* Ambient Background Glow */
     .aurora-bg {
       position: fixed;
-      inset: -20%;
+      inset: -30%;
       z-index: -1;
       pointer-events: none;
       background:
-        radial-gradient(circle at 10% 15%, rgba(139, 92, 246, 0.13) 0%, transparent 45%),
-        radial-gradient(circle at 90% 85%, rgba(6, 182, 212, 0.11) 0%, transparent 45%),
+        radial-gradient(circle at 12% 18%, rgba(139, 92, 246, 0.15) 0%, transparent 45%),
+        radial-gradient(circle at 88% 82%, rgba(6, 182, 212, 0.12) 0%, transparent 45%),
         radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.05) 0%, transparent 50%);
-      filter: blur(60px);
+      filter: blur(65px);
     }
 
     .grid-pattern {
@@ -95,8 +95,8 @@
       inset: 0;
       z-index: -1;
       background-image:
-        linear-gradient(rgba(255, 255, 255, 0.016) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.016) 1px, transparent 1px);
+        linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
       background-size: 28px 28px;
       pointer-events: none;
     }
@@ -111,8 +111,9 @@
       justify-content: space-between;
       padding: 0 16px;
       border-bottom: 1px solid var(--border);
-      background: rgba(7, 8, 14, 0.88);
-      backdrop-filter: blur(18px);
+      background: rgba(6, 7, 11, 0.88);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
       z-index: 50;
     }
 
@@ -150,7 +151,7 @@
       font-weight: 700;
       background: rgba(139, 92, 246, 0.15);
       color: var(--primary-light);
-      border: 1px solid rgba(139, 92, 246, 0.3);
+      border: 1px solid rgba(139, 92, 246, 0.32);
       padding: 1px 6px;
       border-radius: 999px;
       letter-spacing: 0.03em;
@@ -162,14 +163,14 @@
       color: var(--secondary);
       background: rgba(6, 182, 212, 0.1);
       border: 1px solid rgba(6, 182, 212, 0.25);
-      padding: 1px 5px;
+      padding: 1px 6px;
       border-radius: 999px;
     }
 
     /* Engine Switcher */
     .engine-switcher {
       display: flex;
-      background: rgba(0, 0, 0, 0.45);
+      background: rgba(0, 0, 0, 0.5);
       border: 1px solid var(--border);
       border-radius: 999px;
       padding: 2px;
@@ -195,18 +196,18 @@
 
     .engine-btn:hover:not(.active) {
       color: var(--fg);
-      background: rgba(255, 255, 255, 0.05);
+      background: rgba(255, 255, 255, 0.06);
     }
 
     .engine-btn.active {
       background: linear-gradient(135deg, var(--primary) 0%, #6366f1 100%);
       color: #fff;
-      box-shadow: 0 2px 8px var(--primary-glow);
+      box-shadow: 0 2px 10px var(--primary-glow);
     }
 
     .engine-btn.active.web {
       background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
-      box-shadow: 0 2px 8px var(--secondary-glow);
+      box-shadow: 0 2px 10px var(--secondary-glow);
     }
 
     /* Right topbar group */
@@ -220,7 +221,7 @@
       display: flex;
       align-items: center;
       gap: 6px;
-      padding: 3px 9px;
+      padding: 3px 10px;
       border-radius: 999px;
       background: rgba(14, 18, 28, 0.85);
       border: 1px solid var(--border);
@@ -302,14 +303,15 @@
       border: 1px solid var(--border);
       border-radius: var(--radius);
       padding: 10px 14px;
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
       display: flex;
       flex-direction: column;
       position: relative;
       height: 100%;
       overflow: hidden;
       box-sizing: border-box;
+      box-shadow: 0 16px 40px -12px rgba(0, 0, 0, 0.5);
     }
 
     /* Column 1: Editor Card */
@@ -336,6 +338,14 @@
       gap: 6px;
     }
 
+    .card-label-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--primary-light);
+      box-shadow: 0 0 6px var(--primary);
+    }
+
     .input-stats {
       font-size: 0.68rem;
       color: var(--fg-subtle);
@@ -358,7 +368,7 @@
     /* Textarea Box (Flex grow) */
     .textarea-box {
       flex: 1;
-      min-height: 60px;
+      min-height: 55px;
       position: relative;
       display: flex;
     }
@@ -367,7 +377,7 @@
       width: 100%;
       height: 100%;
       resize: none;
-      background: rgba(0, 0, 0, 0.38);
+      background: rgba(0, 0, 0, 0.4);
       border: 1px solid var(--border);
       border-radius: var(--radius-sm);
       color: var(--fg);
@@ -414,8 +424,8 @@
     }
 
     .preset-pill:hover {
-      background: rgba(139, 92, 246, 0.14);
-      border-color: rgba(139, 92, 246, 0.4);
+      background: rgba(139, 92, 246, 0.16);
+      border-color: rgba(139, 92, 246, 0.45);
       color: var(--fg);
     }
 
@@ -453,14 +463,15 @@
       cursor: pointer;
       color: var(--fg-muted);
       transition: all var(--transition);
+      position: relative;
     }
 
     .voice-btn:hover { background: rgba(255, 255, 255, 0.06); color: var(--fg); }
     .voice-btn.active {
-      background: rgba(139, 92, 246, 0.2);
+      background: rgba(139, 92, 246, 0.22);
       border-color: var(--primary);
       color: #fff;
-      box-shadow: 0 0 10px var(--primary-glow);
+      box-shadow: 0 0 12px var(--primary-glow);
     }
 
     .voice-btn-name { font-size: 0.82rem; font-weight: 700; }
@@ -472,7 +483,7 @@
       display: grid;
       grid-template-columns: 1fr 1fr 1fr;
       gap: 7px;
-      background: rgba(0, 0, 0, 0.28);
+      background: rgba(0, 0, 0, 0.3);
       border: 1px solid var(--border);
       border-radius: var(--radius-sm);
       padding: 6px 9px;
@@ -544,7 +555,7 @@
     }
 
     .btn-generate:hover:not(:disabled) {
-      box-shadow: 0 6px 20px var(--primary-glow);
+      box-shadow: 0 6px 22px var(--primary-glow);
       transform: translateY(-1px);
     }
 
@@ -558,7 +569,7 @@
     .kbd-shortcut {
       font-size: 0.62rem;
       background: rgba(0, 0, 0, 0.35);
-      border: 1px solid rgba(255, 255, 255, 0.16);
+      border: 1px solid rgba(255, 255, 255, 0.18);
       border-radius: 3px;
       padding: 1px 5px;
       color: rgba(255, 255, 255, 0.7);
@@ -599,22 +610,22 @@
     }
 
     .badge-voice {
-      background: rgba(139, 92, 246, 0.18);
+      background: rgba(139, 92, 246, 0.2);
       color: var(--primary-light);
-      border: 1px solid rgba(139, 92, 246, 0.35);
+      border: 1px solid rgba(139, 92, 246, 0.38);
     }
 
     .badge-engine {
-      background: rgba(6, 182, 212, 0.15);
+      background: rgba(6, 182, 212, 0.16);
       color: var(--secondary);
-      border: 1px solid rgba(6, 182, 212, 0.3);
+      border: 1px solid rgba(6, 182, 212, 0.32);
     }
 
     /* Waveform Container */
     .waveform-wrap {
       flex: 1;
-      min-height: 80px;
-      background: rgba(0, 0, 0, 0.42);
+      min-height: 75px;
+      background: rgba(0, 0, 0, 0.45);
       border: 1px solid var(--border);
       border-radius: var(--radius-sm);
       position: relative;
@@ -637,11 +648,11 @@
       bottom: 0;
       left: 0;
       width: 0%;
-      background: rgba(139, 92, 246, 0.14);
+      background: rgba(139, 92, 246, 0.15);
       border-right: 2px solid var(--primary-light);
-      box-shadow: 0 0 10px var(--primary-glow);
+      box-shadow: 0 0 12px var(--primary-glow);
       pointer-events: none;
-      transition: width 0.04s linear;
+      transition: width 0.03s linear;
     }
 
     /* Playback Strip */
@@ -649,7 +660,7 @@
       display: flex;
       align-items: center;
       gap: 10px;
-      background: rgba(0, 0, 0, 0.28);
+      background: rgba(0, 0, 0, 0.3);
       border: 1px solid var(--border);
       border-radius: var(--radius-sm);
       padding: 6px 10px;
@@ -729,7 +740,7 @@
     }
 
     .metric-cell {
-      background: rgba(0, 0, 0, 0.25);
+      background: rgba(0, 0, 0, 0.28);
       border: 1px solid var(--border);
       border-radius: var(--radius-xs);
       padding: 5px 7px;
@@ -871,8 +882,8 @@
       <div class="studio-card card-editor">
         <div class="card-header-row">
           <span class="card-label">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-            Texto en inglés
+            <span class="card-label-dot"></span>
+            PROMPT STUDIO
           </span>
           <div class="input-stats">
             <span id="charCount">0 c</span>
@@ -884,16 +895,16 @@
         </div>
 
         <div class="textarea-box">
-          <textarea id="textInput" placeholder="Escribe tu texto en inglés aquí...">The total investment is US$ 320,000 for 175,000 units. Our fast TTS engine synthesizes audio at 24 kHz with AI and ONNX.</textarea>
+          <textarea id="textInput" placeholder="Escribe tu texto en inglés aquí...">Our fast tts engine boosted accuracy by 15.5% with a budget of US$ 320,000 for 175,000 units.</textarea>
         </div>
 
         <!-- Preset Chips -->
         <div class="presets-row">
-          <button class="preset-pill" data-t="The total investment is US$ 320,000 for 175,000 units.">💰 Finanzas (US$ 320k)</button>
+          <button class="preset-pill" data-t="Our fast tts engine boosted accuracy by 15.5% with a budget of US$ 320,000 for 175,000 units.">⚡ TTS & % (15.5%)</button>
+          <button class="preset-pill" data-t="The total investment was US$ 320,000 for 175,000 units delivered on time.">💰 Finanzas (US$ 320k)</button>
+          <button class="preset-pill" data-t="Q3 operating margin expanded by 24.8% while server costs dropped 50%.">📊 Porcentajes (24.8%)</button>
           <button class="preset-pill" data-t="We saved $320,000 and another $1,250.50 on cloud infrastructure.">🏷️ Precios ($1,250.50)</button>
-          <button class="preset-pill" data-t="Our fast TTS architecture synthesizes audio with low latency using ONNX and AI.">⚡ Tech TTS & AI</button>
           <button class="preset-pill" data-t="Hello! Welcome to fast tiny tts, an ultra-fast text to speech engine.">👋 Bienvenida</button>
-          <button class="preset-pill" data-t="The executive meeting was rescheduled to 3:30 pm on Friday, October 14th.">📅 Calendario</button>
         </div>
 
         <!-- Voice & Sliders Grid -->
@@ -961,7 +972,10 @@
       <div class="studio-card card-player">
         <div class="player-meta-bar">
           <div style="display:flex;align-items:center;">
-            <span class="card-label">Studio Monitor</span>
+            <span class="card-label">
+              <span class="card-label-dot" style="background:var(--secondary);box-shadow:0 0 6px var(--secondary);"></span>
+              STUDIO MONITOR
+            </span>
             <span class="badge-pill badge-voice" id="tagVoice">F2</span>
             <span class="badge-pill badge-engine" id="tagEngine">⚡ Bun API</span>
           </div>
@@ -1113,7 +1127,7 @@
         audioCtx = new AudioCtxClass();
         analyserNode = audioCtx.createAnalyser();
         analyserNode.fftSize = 256;
-        analyserNode.smoothingTimeConstant = 0.75;
+        analyserNode.smoothingTimeConstant = 0.8;
       }
       if (audioCtx.state === 'suspended') {
         audioCtx.resume();
@@ -1256,7 +1270,7 @@
       }
     }
 
-    // Waveform Drawing
+    // Waveform Drawing & Visualizer
     function drawIdleWaveform() {
       const canvas = els.waveCanvas;
       const dpr = window.devicePixelRatio || 1;
@@ -1329,6 +1343,46 @@
       }
     }
 
+    // Real-time Audio Spectrum when playing
+    function renderLiveSpectrum() {
+      if (!state.isPlaying || !analyserNode) return;
+      const canvas = els.waveCanvas;
+      const dpr = window.devicePixelRatio || 1;
+      const w = canvas.clientWidth;
+      const h = canvas.clientHeight;
+      if (!w || !h) return;
+
+      const ctx = canvas.getContext('2d');
+      const bufferLength = analyserNode.frequencyBinCount;
+      const dataArray = new Uint8Array(bufferLength);
+      analyserNode.getByteFrequencyData(dataArray);
+
+      // Re-render envelope as base
+      renderAudioEnvelope(state.audioSamples);
+
+      // Overlay live glowing frequency spectrum
+      const barCount = Math.min(48, Math.floor(w / 8));
+      const barWidth = 4;
+      const gap = (w - (barCount * barWidth)) / (barCount + 1);
+
+      for (let i = 0; i < barCount; i++) {
+        const val = dataArray[i * 2] || 0;
+        const barHeight = (val / 255) * (h * 0.75);
+        const x = gap + i * (barWidth + gap);
+        const y = h - barHeight - 4;
+
+        const grad = ctx.createLinearGradient(0, y, 0, h);
+        grad.addColorStop(0, 'rgba(16, 185, 129, 0.85)');
+        grad.addColorStop(0.5, 'rgba(6, 182, 212, 0.6)');
+        grad.addColorStop(1, 'rgba(139, 92, 246, 0.3)');
+
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.roundRect(x, y, barWidth, barHeight, 2);
+        ctx.fill();
+      }
+    }
+
     // Playback Engine
     function stopPlayback() {
       if (audioSourceNode) {
@@ -1395,6 +1449,9 @@
       state.isPlaying = false;
       els.playIcon.style.display = 'block';
       els.pauseIcon.style.display = 'none';
+      if (state.audioSamples) {
+        renderAudioEnvelope(state.audioSamples);
+      }
     }
 
     function togglePlayPause() {
@@ -1438,6 +1495,8 @@
       const progressFrac = Math.min(1, current / state.duration);
       els.waveformCursor.style.width = (progressFrac * 100) + '%';
       els.timeCurrent.textContent = fmtTime(current);
+
+      renderLiveSpectrum();
 
       animFrameId = requestAnimationFrame(animatePlayback);
     }

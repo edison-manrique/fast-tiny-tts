@@ -198,10 +198,26 @@ function normalizeTextForSpeech(text: string): string {
     return ' ' + formatCurrencyWords(num, 'pounds') + ' ';
   });
 
-  // 5. Percentages: 50% / 17.5%
-  t = t.replace(/(\d+(?:\.\d+)?)\s*%/g, '$1 percent');
+  // 5. Percentages: replace any % symbol with " percent "
+  t = t.replace(/%/g, ' percent ');
 
-  // 6. Common technical acronyms & abbreviations
+  // 6. Decimal numbers: 15.5 -> 15 point 5, 0.25 -> zero point two five
+  t = t.replace(/\b(\d+)\.(\d+)\b/g, (_, intPart, decPart) => {
+    const decWords = decPart.split('').map((d: string) => UNITS[parseInt(d, 10)] ?? d).join(' ');
+    return `${intPart} point ${decWords}`;
+  });
+
+  // 7. TTS variants: TTS, tts, Tts, t.t.s., tiny-tts, fast-tiny-tts
+  t = t.replace(/\bt\.t\.s\.?\b/gi, ' T T S ');
+  t = t.replace(/\b(?:fast-?)?(?:tiny-?)?tts\b/gi, (m) => {
+    const lower = m.toLowerCase();
+    if (lower === 'tts') return ' T T S ';
+    if (lower.includes('tiny-tts')) return 'tiny T T S ';
+    if (lower.includes('fast-tiny-tts')) return 'fast tiny T T S ';
+    return ' T T S ';
+  });
+
+  // 8. Common technical acronyms & abbreviations (case-insensitive for acronyms)
   const ACRONYMS: Record<string, string> = {
     'TTS': 'T T S',
     'AI': 'A I',
@@ -241,7 +257,7 @@ function normalizeTextForSpeech(text: string): string {
   };
 
   for (const [acronym, replacement] of Object.entries(ACRONYMS)) {
-    const re = new RegExp(`\\b${acronym}\\b`, 'g');
+    const re = new RegExp(`\\b${acronym}\\b`, 'gi');
     t = t.replace(re, replacement);
   }
 
@@ -447,6 +463,20 @@ export class Phonemizer {
       } catch (err: any) {
         throw new Error(`Failed to load lexicon from "${lexiconSource}": ${err.message}`);
       }
+    }
+
+    // Ensure custom essentials are registered in the lexicon
+    if (!this.lexicon.has('tts')) {
+      this.lexicon.set('tts', {
+        symbols: ['t', 'iː', 't', 'iː', 'ɛ', 's'],
+        stress: [STRESS_PRIMARY, STRESS_PRIMARY, STRESS_PRIMARY, STRESS_PRIMARY, STRESS_PRIMARY, STRESS_PRIMARY],
+      });
+    }
+    if (!this.lexicon.has('voca')) {
+      this.lexicon.set('voca', {
+        symbols: ['v', 'oʊ', 'k', 'ə'],
+        stress: [STRESS_PRIMARY, STRESS_PRIMARY, STRESS_NONE, STRESS_NONE],
+      });
     }
   }
 
