@@ -89,8 +89,40 @@
       --transition: 120ms ease;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
+
+    textarea, input[type=text], .selectable {
+      -webkit-user-select: text !important;
+      -moz-user-select: text !important;
+      -ms-user-select: text !important;
+      user-select: text !important;
+    }
+
     *::selection { background: var(--primary); color: #ffffff; }
+
+    /* Clean dark scrollbars for any scrollable region */
+    ::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.12);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.25);
+    }
 
     html, body {
       width: 100vw;
@@ -382,12 +414,17 @@
       align-items: center;
       gap: 5px;
       overflow-x: auto;
-      padding-bottom: 2px;
+      overflow-y: hidden;
+      padding: 2px 0;
       flex-shrink: 0;
-      scrollbar-width: thin;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
     }
-    .presets-row::-webkit-scrollbar { height: 3px; }
-    .presets-row::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+    .presets-row::-webkit-scrollbar {
+      display: none;
+      width: 0;
+      height: 0;
+    }
 
     .preset-pill {
       padding: 3px 9px;
@@ -1142,6 +1179,16 @@
         showToast('Ejemplo cargado', 'info');
       };
     });
+
+    const presetsRow = document.querySelector('.presets-row');
+    if (presetsRow) {
+      presetsRow.addEventListener('wheel', (e) => {
+        if (e.deltaY !== 0) {
+          e.preventDefault();
+          presetsRow.scrollLeft += e.deltaY;
+        }
+      }, { passive: false });
+    }
 
     // Voice switching
     function setVoice(v) {
