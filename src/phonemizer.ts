@@ -181,12 +181,15 @@ function formatCurrencyWords(amountStr: string, unitName: string): string {
  * Text Pre-normalizer: converts currencies, symbols, numbers with commas, and acronyms
  */
 function normalizeTextForSpeech(text: string): string {
-  let t = text;
+  let t = text || '';
 
   // 1. Normalize ellipsis ... or more to …
   t = t.replace(/\.{3,}/g, '…');
 
-  // 1.1 Honorific titles before names: Dr. -> Doctor, Mr. -> Mister, Mrs. -> Missus, etc.
+  // 1.1 Tilde approx symbol (~4.5M -> approximately 4.5M)
+  t = t.replace(/~/g, ' approximately ');
+
+  // 1.2 Honorific titles before names: Dr. -> Doctor, Mr. -> Mister, Mrs. -> Missus, etc.
   t = t.replace(/\bdr\.\s*/gi, 'Doctor ');
   t = t.replace(/\bdr\b(?=\s+[A-Z])/gi, 'Doctor');
   t = t.replace(/\bmr\.\s*/gi, 'Mister ');
@@ -199,7 +202,7 @@ function normalizeTextForSpeech(text: string): string {
   t = t.replace(/\bjr\.\s*/gi, 'Junior ');
   t = t.replace(/\bsr\.\s*/gi, 'Senior ');
 
-  // 1.2 Dates in format M/D, MM/DD, M/D/YYYY, MM/DD/YYYY, M/D/YY (e.g. 3/14 -> March 14th, 12/25/2026 -> December 25th, 2026)
+  // 1.3 Dates in format M/D, MM/DD, M/D/YYYY, MM/DD/YYYY, M/D/YY (e.g. 3/14 -> March 14th)
   t = t.replace(/\b(0?[1-9]|1[0-2])\/(0?[1-9]|[12]\d|3[01])(?:\/(\d{2,4}))?\b/g, (match, mStr, dStr, yStr) => {
     const m = parseInt(mStr, 10);
     const d = parseInt(dStr, 10);
@@ -215,6 +218,31 @@ function normalizeTextForSpeech(text: string): string {
     }
     return match;
   });
+
+  // 1.4 Cryptographic algorithms & proposals (Argon2id, BIP-340, etc.)
+  t = t.replace(/\bargon-?2-?id\b/gi, 'Argon two I D');
+  t = t.replace(/\bargon-?2-?i\b/gi, 'Argon two I');
+  t = t.replace(/\bargon-?2-?d\b/gi, 'Argon two D');
+  t = t.replace(/\bargon-?2\b/gi, 'Argon two');
+  t = t.replace(/\bBIP-?(\d+)\b/gi, 'B I P $1');
+
+  // 1.5 Storage & frequency units with decimals or integers (e.g. 17.6 MB, 2.4 GHz, 100 ms)
+  t = t.replace(/\b(\d+(?:\.\d+)?)\s*(?:TB|tb)\b/gi, '$1 terabytes');
+  t = t.replace(/\b(\d+(?:\.\d+)?)\s*(?:GB|gb)\b/gi, '$1 gigabytes');
+  t = t.replace(/\b(\d+(?:\.\d+)?)\s*(?:MB|mb)\b/gi, '$1 megabytes');
+  t = t.replace(/\b(\d+(?:\.\d+)?)\s*(?:KB|kb)\b/gi, '$1 kilobytes');
+  t = t.replace(/\b(\d+(?:\.\d+)?)\s*(?:GHz|ghz)\b/gi, '$1 gigahertz');
+  t = t.replace(/\b(\d+(?:\.\d+)?)\s*(?:MHz|mhz)\b/gi, '$1 megahertz');
+  t = t.replace(/\b(\d+(?:\.\d+)?)\s*(?:kHz|khz)\b/gi, '$1 kilohertz');
+  t = t.replace(/\b(\d+(?:\.\d+)?)\s*Hz\b/gi, '$1 hertz');
+  t = t.replace(/\b(\d+(?:\.\d+)?)\s*ms\b/gi, '$1 milliseconds');
+  t = t.replace(/\b(\d+(?:\.\d+)?)\s*mph\b/gi, '$1 miles per hour');
+  t = t.replace(/\b(\d+(?:\.\d+)?)\s*km\b/gi, '$1 kilometers');
+
+  // 1.6 Quantity multipliers: 4.5M -> 4.5 million, 7B -> 7 billion, 100k -> 100 thousand
+  t = t.replace(/\b(\d+(?:\.\d+)?)\s*M\b/g, '$1 million');
+  t = t.replace(/\b(\d+(?:\.\d+)?)\s*B\b/g, '$1 billion');
+  t = t.replace(/\b(\d+(?:\.\d+)?)\s*[Kk]\b/g, '$1 thousand');
 
   // 2. Currencies with US$ / USD: US$ 320,000 / US$320000 / USD 175,000
   t = t.replace(/(?:US\$|USD)\s*(\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?)/gi, (_, num) => {
@@ -287,6 +315,9 @@ function normalizeTextForSpeech(text: string): string {
     'SDKs': 'S D K s',
     'CLI': 'C L I',
     'RTF': 'R T F',
+    'PCM': 'P C M',
+    'BIP': 'B I P',
+    'WAV': 'W A V',
     'LLM': 'L L M',
     'LLMs': 'L L M s',
     'FAQ': 'F A Q',
@@ -300,18 +331,6 @@ function normalizeTextForSpeech(text: string): string {
     const re = new RegExp(`\\b${acronym}\\b`, 'gi');
     t = t.replace(re, replacement);
   }
-
-  // Common units
-  t = t.replace(/\b(\d+)\s*(?:kHz|khz)\b/gi, '$1 kilohertz');
-  t = t.replace(/\b(\d+)\s*(?:MHz|mhz)\b/gi, '$1 megahertz');
-  t = t.replace(/\b(\d+)\s*(?:GHz|ghz)\b/gi, '$1 gigahertz');
-  t = t.replace(/\b(\d+)\s*ms\b/gi, '$1 milliseconds');
-  t = t.replace(/\b(\d+)\s*(?:KB|kb)\b/gi, '$1 kilobytes');
-  t = t.replace(/\b(\d+)\s*(?:MB|mb)\b/gi, '$1 megabytes');
-  t = t.replace(/\b(\d+)\s*(?:GB|gb)\b/gi, '$1 gigabytes');
-  t = t.replace(/\b(\d+)\s*(?:TB|tb)\b/gi, '$1 terabytes');
-  t = t.replace(/\b(\d+)\s*mph\b/gi, '$1 miles per hour');
-  t = t.replace(/\b(\d+)\s*km\b/gi, '$1 kilometers');
 
   // Common word abbreviations
   t = t.replace(/\betc\./gi, 'etcetera');
@@ -399,6 +418,130 @@ function ruleBasedPhonemize(word: string): { symbols: string[]; stress: number[]
 }
 
 export type Lexicon = Map<string, { symbols: string[]; stress: number[] }>;
+
+const VOICELESS_CONSONANTS = new Set(['p', 't', 'k', 'f', 'θ']);
+const SIBILANTS = new Set(['s', 'z', 'ʃ', 'ʒ', 'tʃ', 'dʒ']);
+const ALVEOLAR_STOPS = new Set(['t', 'd']);
+
+function getInflectedPronunciation(word: string, lexicon: Lexicon): { symbols: string[]; stress: number[] } | null {
+  // 1. Plural / 3rd person singular -s / -es / -ies
+  if (word.length > 3 && word.endsWith('s')) {
+    // -ies -> -y (e.g. entities -> entity)
+    if (word.endsWith('ies') && word.length > 4) {
+      const stem = word.slice(0, -3) + 'y';
+      const base = lexicon.get(stem);
+      if (base) {
+        return {
+          symbols: [...base.symbols, 'z'],
+          stress: [...base.stress, STRESS_NONE],
+        };
+      }
+    }
+    // -es (e.g. boxes -> box, watches -> watch, buses -> bus)
+    if (word.endsWith('es') && word.length > 3) {
+      const stem = word.slice(0, -2);
+      const base = lexicon.get(stem);
+      if (base && base.symbols.length > 0) {
+        const lastPhone = base.symbols[base.symbols.length - 1];
+        if (SIBILANTS.has(lastPhone)) {
+          return {
+            symbols: [...base.symbols, 'ᵻ', 'z'],
+            stress: [...base.stress, STRESS_NONE, STRESS_NONE],
+          };
+        }
+        return {
+          symbols: [...base.symbols, 'z'],
+          stress: [...base.stress, STRESS_NONE],
+        };
+      }
+      const stemE = word.slice(0, -1);
+      const baseE = lexicon.get(stemE);
+      if (baseE && baseE.symbols.length > 0) {
+        const lastPhone = baseE.symbols[baseE.symbols.length - 1];
+        if (SIBILANTS.has(lastPhone)) {
+          return {
+            symbols: [...baseE.symbols, 'ᵻ', 'z'],
+            stress: [...baseE.stress, STRESS_NONE, STRESS_NONE],
+          };
+        }
+        return {
+          symbols: [...baseE.symbols, 'z'],
+          stress: [...baseE.stress, STRESS_NONE],
+        };
+      }
+    }
+    // simple -s (e.g. derivations -> derivation, signatures -> signature, parameters -> parameter)
+    const stem = word.slice(0, -1);
+    const base = lexicon.get(stem);
+    if (base && base.symbols.length > 0) {
+      const lastPhone = base.symbols[base.symbols.length - 1];
+      let sPhone = 'z';
+      if (VOICELESS_CONSONANTS.has(lastPhone)) {
+        sPhone = 's';
+      } else if (SIBILANTS.has(lastPhone)) {
+        return {
+          symbols: [...base.symbols, 'ᵻ', 'z'],
+          stress: [...base.stress, STRESS_NONE, STRESS_NONE],
+        };
+      }
+      return {
+        symbols: [...base.symbols, sPhone],
+        stress: [...base.stress, STRESS_NONE],
+      };
+    }
+  }
+
+  // 2. Past tense -ed / -d
+  if (word.length > 3 && word.endsWith('ed')) {
+    let base = lexicon.get(word.slice(0, -2));
+    if (!base) base = lexicon.get(word.slice(0, -1));
+    if (base && base.symbols.length > 0) {
+      const lastPhone = base.symbols[base.symbols.length - 1];
+      if (ALVEOLAR_STOPS.has(lastPhone)) {
+        return {
+          symbols: [...base.symbols, 'ᵻ', 'd'],
+          stress: [...base.stress, STRESS_NONE, STRESS_NONE],
+        };
+      } else if (VOICELESS_CONSONANTS.has(lastPhone) || lastPhone === 's' || lastPhone === 'ʃ' || lastPhone === 'tʃ') {
+        return {
+          symbols: [...base.symbols, 't'],
+          stress: [...base.stress, STRESS_NONE],
+        };
+      } else {
+        return {
+          symbols: [...base.symbols, 'd'],
+          stress: [...base.stress, STRESS_NONE],
+        };
+      }
+    }
+  }
+
+  // 3. Participle -ing
+  if (word.length > 4 && word.endsWith('ing')) {
+    let base = lexicon.get(word.slice(0, -3));
+    if (!base) base = lexicon.get(word.slice(0, -3) + 'e');
+    if (base && base.symbols.length > 0) {
+      return {
+        symbols: [...base.symbols, 'ɪ', 'ŋ'],
+        stress: [...base.stress, STRESS_NONE, STRESS_NONE],
+      };
+    }
+  }
+
+  // 4. Adverb -ly
+  if (word.length > 4 && word.endsWith('ly')) {
+    let base = lexicon.get(word.slice(0, -2));
+    if (!base) base = lexicon.get(word.slice(0, -2) + 'e');
+    if (base && base.symbols.length > 0) {
+      return {
+        symbols: [...base.symbols, 'l', 'i'],
+        stress: [...base.stress, STRESS_NONE, STRESS_NONE],
+      };
+    }
+  }
+
+  return null;
+}
 
 export function parseLexiconTsv(tsvContent: string): Lexicon {
   const lexicon: Lexicon = new Map();
@@ -588,11 +731,14 @@ export class Phonemizer {
 
         for (let wIdx = 0; wIdx < subWords.length; wIdx++) {
           const word = subWords[wIdx];
-          const entry = this.lexicon.get(word);
+          const entry = this.lexicon.get(word) ?? getInflectedPronunciation(word, this.lexicon);
           let result: { symbols: string[]; stress: number[] };
 
           if (entry) {
             result = entry;
+            if (!this.lexicon.has(word)) {
+              this.lexicon.set(word, entry);
+            }
           } else {
             unknownWords.push(word);
             result = ruleBasedPhonemize(word);

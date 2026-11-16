@@ -30,7 +30,7 @@ execSync('git config user.email "edisonmanrique@users.noreply.github.com"', opts
 execSync('git remote add origin https://github.com/edison-manrique/fast-tiny-tts.git', opts);
 execSync('git checkout -b gh-pages', opts);
 execSync('git add -A', opts);
-execSync('git commit -m "deploy: fast-tiny-tts library renaming and auto-updating service worker v5"', opts);
+execSync('git commit -m "deploy: update phonemizer (BIP-340, Argon2id, plurals, ~4.5M, 17.6MB, RTF, PCM) and UI v9"', opts);
 console.log('Pushing to origin gh-pages...');
 execSync('git push -f origin gh-pages', opts);
 

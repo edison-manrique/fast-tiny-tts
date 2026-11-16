@@ -902,6 +902,7 @@
 
         <!-- Preset Chips -->
         <div class="presets-row">
+          <button class="preset-pill" data-t="BIP-340 Schnorr signatures, and Argon2id key derivations. ~4.5M parameters, 17.6 MB ONNX model, RTF and PCM.">🔐 Crypto & Tech (~4.5M, Argon2id)</button>
           <button class="preset-pill" data-t="Dr. Patel paid $12.99 for 3 tickets on 3/14 — that's 40% off the usual price.">🎟️ Dr. & 3/14 ($12.99)</button>
           <button class="preset-pill" data-t="In Q4, our fast tts engine boosted accuracy by 15.5% with a total budget of US$ 320,000 for 175,000 units.">📊 Q4 & % (15.5%)</button>
           <button class="preset-pill" data-t="The total contract for Q1 through Q4 is US$ 320,000 for 175,000 units delivered on time.">💰 Finanzas (US$ 320k)</button>
@@ -1049,7 +1050,7 @@
   </div>
 
   <script type="module">
-    import { FastTinyTTS, encodeWav } from './dist/web/fast-tiny-tts.js';
+    import { FastTinyTTS, encodeWav } from './dist/web/fast-tiny-tts.js?v=9';
 
     // State
     const isStaticHost = window.location.hostname.includes('github.io') || window.location.protocol === 'file:';
