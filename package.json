@@ -1,0 +1,66 @@
+{
+  "name": "fast-tiny-tts",
+  "version": "1.0.0",
+  "description": "Ultra-compact English TTS (4.5M params, 24kHz, F2/M2 voices) — runs on CPU, mobile, browser via ONNX. Model by Muhammed Nazeem (n4ze3m/tiny-voca). Port & library by Edison Manrique Chocce.",
+  "type": "module",
+  "main": "./dist/node/node/index.js",
+  "module": "./dist/web/tiny-voca.js",
+  "browser": "./dist/web/tiny-voca.js",
+  "types": "./dist/node/node/index.d.ts",
+  "exports": {
+    ".": {
+      "node": "./dist/node/node/index.js",
+      "import": "./dist/web/tiny-voca.js",
+      "browser": "./dist/web/tiny-voca.js",
+      "types": "./dist/node/node/index.d.ts"
+    },
+    "./node": {
+      "import": "./dist/node/node/index.js",
+      "types": "./dist/node/node/index.d.ts"
+    },
+    "./web": {
+      "import": "./dist/web/tiny-voca.js",
+      "types": "./dist/web/tiny-voca.d.ts"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist/**/*",
+    "!dist/**/*.map"
+  ],
+  "scripts": {
+    "build": "bun run build:node && bun run build:web",
+    "build:node": "tsc --project tsconfig.node.json",
+    "build:web": "tsc --project tsconfig.web.json && bun run bundle:web",
+    "bundle:web": "esbuild lib/web/index.ts --bundle --platform=browser --format=esm --outfile=dist/web/tiny-voca.js --external:onnxruntime-web --target=es2022 && node -e \"const fs=require('fs'); fs.mkdirSync('public/dist/web',{recursive:true}); fs.copyFileSync('dist/web/tiny-voca.js','public/dist/web/tiny-voca.js');\"",
+    "build:types": "tsc --project tsconfig.lib.json --emitDeclarationOnly",
+    "dev": "bun run src/server.ts",
+    "test": "bun run src/index.ts",
+    "bench": "bun run src/benchmark.ts",
+    "prepublishOnly": "bun run build"
+  },
+  "keywords": [
+    "tts",
+    "text-to-speech",
+    "onnx",
+    "tiny-voca",
+    "edge-ai",
+    "webgpu",
+    "wasm"
+  ],
+  "author": "Edison Manrique Chocce",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "onnxruntime-node": "^1.20.0"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.1.0",
+    "@types/node": "^26.6.6",
+    "esbuild": "^0.24.0",
+    "typescript": "^5.8.0"
+  },
+  "engines": {
+    "node": ">=18",
+    "bun": ">=1.0"
+  }
+}

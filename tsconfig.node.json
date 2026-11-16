@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2022"],
+    "declaration": true,
+    "declarationMap": false,
+    "outDir": "./dist/node",
+    "rootDir": "./lib",
+    "strict": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": false,
+    "types": ["node"],
+    "sourceMap": false
+  },
+  "include": ["lib/node/**/*.ts", "lib/types.ts", "lib/phonemizer.ts", "lib/core.ts", "lib/wav.ts"],
+  "exclude": ["lib/web/**/*", "node_modules"]
+}

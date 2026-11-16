@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2022", "DOM"],
+    "declaration": true,
+    "declarationMap": false,
+    "outDir": "./dist/web",
+    "rootDir": "./lib",
+    "strict": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": false,
+    "sourceMap": false,
+    "baseUrl": ".",
+    "paths": {
+      "onnxruntime-web": ["./lib/web/ort-shim.ts"]
+    }
+  },
+  "include": ["lib/web/**/*.ts", "lib/types.ts", "lib/phonemizer.ts", "lib/core.ts", "lib/wav.ts"],
+  "exclude": ["lib/node/**/*", "node_modules"]
+}
