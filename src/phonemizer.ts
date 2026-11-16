@@ -1,6 +1,7 @@
 /**
  * fast-tiny-tts — Universal English Phonemizer based on official IPA Lexicon
  * Works cross-platform in Browser (fetch/tsv) and Node/Bun (fs/path).
+ * Includes comprehensive normalization for numbers (175,000), currencies ($320,000, US$), acronyms (TTS, AI), etc.
  */
 
 export interface PhonemizeResult {
@@ -86,7 +87,7 @@ const ORDINALS: Record<string, string> = {
   twenty: 'twentieth', thirty: 'thirtieth', forty: 'fortieth', fifty: 'fiftieth',
   sixty: 'sixtieth', seventy: 'seventieth', eighty: 'eightieth',
   ninety: 'ninetieth', hundred: 'hundredth', thousand: 'thousandth',
-  million: 'millionth',
+  million: 'millionth', billion: 'billionth',
 };
 
 function intToWords(n: number): string {
@@ -126,8 +127,11 @@ function intToWords(n: number): string {
   return parts.join(' ');
 }
 
-function toOrdinalWord(word: string): string {
-  return ORDINALS[word] ?? word + 'th';
+function toOrdinalWord(numWords: string): string {
+  const parts = numWords.split(' ');
+  const last = parts[parts.length - 1];
+  parts[parts.length - 1] = ORDINALS[last] ?? last + 'th';
+  return parts.join(' ');
 }
 
 function numberToWords(numStr: string): string | null {
@@ -137,15 +141,146 @@ function numberToWords(numStr: string): string | null {
   if (numStr.includes('.')) {
     const [intPart, decPart] = numStr.split('.');
     const intWords = intToWords(parseInt(intPart, 10));
-    const decWords = decPart.split('').map((d) => UNITS[parseInt(d, 10)]).join(' ');
+    const decWords = decPart.split('').map((d) => UNITS[parseInt(d, 10)] ?? d).join(' ');
     return `${intWords} point ${decWords}`;
   }
 
   return intToWords(parseInt(numStr, 10));
 }
 
+function formatCurrencyWords(amountStr: string, unitName: string): string {
+  const clean = amountStr.replace(/,/g, '');
+  if (clean.includes('.')) {
+    const [intPart, decPart] = clean.split('.');
+    const intVal = parseInt(intPart, 10) || 0;
+    const decVal = parseInt(decPart.slice(0, 2).padEnd(2, '0'), 10) || 0;
+    const intWords = intToWords(intVal);
+    const decWords = intToWords(decVal);
+    const singularUnit = unitName.replace(/s$/, '');
+    const mainUnit = intVal === 1 ? singularUnit : unitName;
+    const centUnit = decVal === 1 ? 'cent' : 'cents';
+    if (intVal === 0 && decVal > 0) return `${decWords} ${centUnit}`;
+    if (decVal === 0) return `${intWords} ${mainUnit}`;
+    return `${intWords} ${mainUnit} and ${decWords} ${centUnit}`;
+  } else {
+    const intVal = parseInt(clean, 10) || 0;
+    const intWords = intToWords(intVal);
+    const singularUnit = unitName.replace(/s$/, '');
+    const mainUnit = intVal === 1 ? singularUnit : unitName;
+    return `${intWords} ${mainUnit}`;
+  }
+}
+
+/**
+ * Text Pre-normalizer: converts currencies, symbols, numbers with commas, and acronyms
+ */
+function normalizeTextForSpeech(text: string): string {
+  let t = text;
+
+  // 1. Normalize ellipsis ... or more to …
+  t = t.replace(/\.{3,}/g, '…');
+
+  // 2. Currencies with US$ / USD: US$ 320,000 / US$320000 / USD 175,000
+  t = t.replace(/(?:US\$|USD)\s*(\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?)/gi, (_, num) => {
+    return ' ' + formatCurrencyWords(num, 'U S dollars') + ' ';
+  });
+
+  // 3. Currencies with $: $ 320,000 / $320,000 / $320000 / $1,250.50 / $10
+  t = t.replace(/\$\s*(\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?)/g, (_, num) => {
+    return ' ' + formatCurrencyWords(num, 'dollars') + ' ';
+  });
+
+  // 4. Other currencies: € / EUR, £ / GBP
+  t = t.replace(/(?:€|EUR)\s*(\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?)/gi, (_, num) => {
+    return ' ' + formatCurrencyWords(num, 'euros') + ' ';
+  });
+  t = t.replace(/(?:£|GBP)\s*(\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?)/gi, (_, num) => {
+    return ' ' + formatCurrencyWords(num, 'pounds') + ' ';
+  });
+
+  // 5. Percentages: 50% / 17.5%
+  t = t.replace(/(\d+(?:\.\d+)?)\s*%/g, '$1 percent');
+
+  // 6. Common technical acronyms & abbreviations
+  const ACRONYMS: Record<string, string> = {
+    'TTS': 'T T S',
+    'AI': 'A I',
+    'ML': 'M L',
+    'NLP': 'N L P',
+    'ASR': 'A S R',
+    'US': 'U S',
+    'USA': 'U S A',
+    'API': 'A P I',
+    'APIs': 'A P I s',
+    'CPU': 'C P U',
+    'CPUs': 'C P U s',
+    'GPU': 'G P U',
+    'GPUs': 'G P U s',
+    'ONNX': 'O N N X',
+    'WASM': 'wasm',
+    'HTML': 'H T M L',
+    'CSS': 'C S S',
+    'JS': 'J S',
+    'UI': 'U I',
+    'UX': 'U X',
+    'URL': 'U R L',
+    'URLs': 'U R L s',
+    'HTTP': 'H T T P',
+    'HTTPS': 'H T T P S',
+    'SDK': 'S D K',
+    'SDKs': 'S D K s',
+    'CLI': 'C L I',
+    'RTF': 'R T F',
+    'LLM': 'L L M',
+    'LLMs': 'L L M s',
+    'FAQ': 'F A Q',
+    'ID': 'I D',
+    'OS': 'O S',
+    'PC': 'P C',
+    'SQL': 'S Q L',
+  };
+
+  for (const [acronym, replacement] of Object.entries(ACRONYMS)) {
+    const re = new RegExp(`\\b${acronym}\\b`, 'g');
+    t = t.replace(re, replacement);
+  }
+
+  // Common units
+  t = t.replace(/\b(\d+)\s*(?:kHz|khz)\b/gi, '$1 kilohertz');
+  t = t.replace(/\b(\d+)\s*(?:MHz|mhz)\b/gi, '$1 megahertz');
+  t = t.replace(/\b(\d+)\s*(?:GHz|ghz)\b/gi, '$1 gigahertz');
+  t = t.replace(/\b(\d+)\s*ms\b/gi, '$1 milliseconds');
+  t = t.replace(/\b(\d+)\s*(?:KB|kb)\b/gi, '$1 kilobytes');
+  t = t.replace(/\b(\d+)\s*(?:MB|mb)\b/gi, '$1 megabytes');
+  t = t.replace(/\b(\d+)\s*(?:GB|gb)\b/gi, '$1 gigabytes');
+  t = t.replace(/\b(\d+)\s*(?:TB|tb)\b/gi, '$1 terabytes');
+  t = t.replace(/\b(\d+)\s*mph\b/gi, '$1 miles per hour');
+  t = t.replace(/\b(\d+)\s*km\b/gi, '$1 kilometers');
+
+  // Common word abbreviations
+  t = t.replace(/\betc\./gi, 'etcetera');
+  t = t.replace(/\betc\b/gi, 'etcetera');
+  t = t.replace(/\be\.g\.,?/gi, 'for example');
+  t = t.replace(/\bi\.e\.,?/gi, 'that is');
+  t = t.replace(/\bvs\./gi, 'versus');
+  t = t.replace(/\bvs\b/gi, 'versus');
+
+  // Math symbols
+  t = t.replace(/\s*=\s*/g, ' equals ');
+  t = t.replace(/\s*\+\s*/g, ' plus ');
+  t = t.replace(/&/g, ' and ');
+
+  // 7. Numbers with commas (e.g. 175,000 or 1,250,000.50) -> strip comma inside numbers
+  // This ensures the tokenizer keeps them together as a numeric unit rather than splitting on the comma!
+  t = t.replace(/\b(\d{1,3}(?:,\d{3})+(?:\.\d+)?)\b/g, (match) => {
+    return match.replace(/,/g, '');
+  });
+
+  return t;
+}
+
 function normalizeNumberWord(word: string): string {
-  // 14th, 1st, 2nd, 3rd
+  // 14th, 1st, 2nd, 3rd, 21st, 100th
   if (/^\d+(st|nd|rd|th)$/i.test(word)) {
     const numPart = word.replace(/\D+$/, '');
     const n = parseInt(numPart, 10);
@@ -155,12 +290,6 @@ function normalizeNumberWord(word: string): string {
   // Pure numbers
   if (/^\d+(\.\d+)?$/.test(word)) {
     return numberToWords(word) ?? word;
-  }
-
-  // 1,000 / 1,250.50
-  if (/^\d{1,3}(,\d{3})+(\.\d+)?$/.test(word)) {
-    const cleaned = word.replace(/,/g, '');
-    return numberToWords(cleaned) ?? word;
   }
 
   // 3:30 -> three thirty
@@ -341,8 +470,10 @@ export class Phonemizer {
 
     push('<bos>', STRESS_NONE);
 
+    // Pre-normalize text for numbers, currencies, acronyms, and symbols
+    const normalizedText = normalizeTextForSpeech(text);
+
     const TOKEN_RE = /[A-Za-zÀ-ÿ0-9]+(?:['''][A-Za-zÀ-ÿ0-9]+)*|[.,;:!?""''—–…()[\]{}]/g;
-    const normalizedText = text.replace(/\.{3,}/g, '…');
 
     const tokens: Array<{ type: 'word' | 'punct'; text: string }> = [];
     for (const m of normalizedText.matchAll(TOKEN_RE)) {
@@ -363,22 +494,33 @@ export class Phonemizer {
           push(mapped, STRESS_NONE);
         }
       } else {
-        let word = token.text.toLowerCase();
-        word = normalizeNumberWord(word);
+        const rawWord = token.text.toLowerCase();
+        const expandedStr = normalizeNumberWord(rawWord);
+        // Split in case a number or abbreviation expanded into multiple words
+        const subWords = expandedStr.split(/\s+/).filter(Boolean);
 
-        const entry = this.lexicon.get(word);
-        let result: { symbols: string[]; stress: number[] };
-        if (entry) {
-          result = entry;
-        } else {
-          unknownWords.push(word);
-          result = ruleBasedPhonemize(word);
+        for (let wIdx = 0; wIdx < subWords.length; wIdx++) {
+          const word = subWords[wIdx];
+          const entry = this.lexicon.get(word);
+          let result: { symbols: string[]; stress: number[] };
+
+          if (entry) {
+            result = entry;
+          } else {
+            unknownWords.push(word);
+            result = ruleBasedPhonemize(word);
+          }
+
+          for (let j = 0; j < result.symbols.length; j++) {
+            push(result.symbols[j], result.stress[j]);
+          }
+
+          if (wIdx < subWords.length - 1) {
+            push('<sp>', STRESS_NONE);
+          }
         }
 
-        for (let j = 0; j < result.symbols.length; j++) {
-          push(result.symbols[j], result.stress[j]);
-        }
-
+        // Punctuation following this word
         if (i + 1 < tokens.length && tokens[i + 1].type === 'punct') {
           const nextToken = tokens[i + 1];
           const mapped = PUNCT_MAP[nextToken.text] ?? nextToken.text;

@@ -92,31 +92,49 @@ const result = await tts.synthesize({
 
 ### Node / Bun
 
+You can clone and link or import directly from the compiled repository:
+
 ```bash
-bun add fast-tiny-tts
-# or
-npm install fast-tiny-tts
+git clone https://github.com/edison-manrique/fast-tiny-tts.git
+cd fast-tiny-tts
+bun install
+bun run build
 ```
 
 ```javascript
-import { TinyVoca } from 'fast-tiny-tts/node';
+import { TinyVoca } from './dist/node/index.js'; // or from 'fast-tiny-tts/node' if linked locally
+import { writeFileSync } from 'fs';
 
 const tts = await TinyVoca.create({
-  modelPath: './dist/models/tiny-voca/model.onnx',
-  phonemizerPath: './dist/models/tiny-voca/phonemizer/lexicon.tsv',
-  configPath: './dist/models/tiny-voca/config.json',
+  modelPath: './models/tiny-voca/onnx/model.onnx',
+  phonemizerPath: './models/tiny-voca/phonemizer/lexicon.tsv',
+  configPath: './models/tiny-voca/config.json',
 });
 
 const result = await tts.synthesize({
-  text: 'Hello from Node!',
+  text: 'The total budget is US$ 320,000 for 175,000 units using our fast TTS engine.',
   voice: 'M2',
-  speed: 1.2,
+  speed: 1.0,
 });
 
 // Save clean normalized 24 kHz WAV to file
-import { writeFileSync } from 'fs';
 writeFileSync('output.wav', result.toWav());
 ```
+
+---
+
+## 🗣️ Smart Speech Normalization
+
+`fast-tiny-tts` includes built-in speech text normalization without external Python or heavy NLP dependencies:
+
+- **Comma Numbers**: `175,000` → *"one hundred seventy-five thousand"*
+- **US Dollars & Currencies**:
+  - `US$ 320,000` / `US$320000` → *"three hundred twenty thousand U S dollars"*
+  - `$320,000` → *"three hundred twenty thousand dollars"*
+  - `$1,250.50` → *"one thousand two hundred fifty dollars and fifty cents"*
+  - `€500` / `£250` → *"five hundred euros"* / *"two hundred fifty pounds"*
+- **Acronyms**: `TTS` → *"T T S"*, `AI` → *"A I"*, `API` → *"A P I"*, `GPU`, `CPU`, `LLM`, `WASM`, `HTML`, etc.
+- **Abbreviations & Units**: `etc.` → *"etcetera"*, `24 kHz` → *"twenty-four kilohertz"*, `50 ms` → *"fifty milliseconds"*
 
 ---
 
@@ -162,27 +180,27 @@ writeFileSync('output.wav', result.toWav());
 fast-tiny-tts/
 ├── package.json              # Workspace config + scripts
 ├── tsconfig.node.json        # Node/Bun TypeScript config
-├── tsconfig.web.json         # Web TypeScript config (types only)
+├── tsconfig.web.json         # Web TypeScript config
 ├── public/
-│   ├── index.html            # Web app (fullscreen, modern UI)
+│   ├── index.html            # Web Studio app (100vh modern UI)
+│   ├── favicon.svg           # Studio favicon
 │   └── dist/
-│       ├── web/tiny-voca.js  # 15 KB ES bundle (esbuild)
-│       ├── onnxruntime-web/  # Local ONNX Runtime (731 KB + 11 MB WASM)
-│       └── models/tiny-voca/ # model.onnx + config.json + lexicon.tsv
-├── lib/
+│       ├── web/tiny-voca.js  # Client ES bundle
+│       ├── onnxruntime-web/  # Local ONNX Runtime Web WASM
+│       └── models/tiny-voca/ # model.onnx + lexicon.tsv
+├── src/
 │   ├── index.ts              # Universal entry point
-│   ├── types.ts              # Shared TypeScript types
-│   ├── phonemizer.ts         # IPA lexicon (124k words) + rules
-│   ├── core.ts               # Core TTS logic (platform-agnostic)
+│   ├── types.ts              # Shared TypeScript definitions
+│   ├── phonemizer.ts         # IPA lexicon (124k words) + speech normalizer
+│   ├── core.ts               # Core TTS inference logic
+│   ├── wav.ts                # 24 kHz WAV encoder & PCM utilities
+│   ├── server.ts             # Bun HTTP server & API
 │   ├── node/index.ts         # Node/Bun entry (onnxruntime-node)
 │   └── web/index.ts          # Browser entry (onnxruntime-web)
-├── dist/                     # Build output
+├── dist/                     # Compiled build outputs
 │   ├── node/                 # Node/Bun build
-│   ├── web/                  # Web build + types
-│   └── models/               # Model assets
-├── src/
-│   └── server.ts             # Bun HTTP server + API
-└── src/tts.ts                # Legacy CLI entry
+│   └── web/                  # Web bundle + types
+└── models/                   # Local tiny-voca model weights
 ```
 
 ---
