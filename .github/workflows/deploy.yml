@@ -1,0 +1,59 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: 'pages'
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Build Web Bundle
+        run: bun run build
+
+      - name: Ensure public assets exist
+        run: |
+          mkdir -p public/dist/models/tiny-voca/phonemizer
+          mkdir -p public/dist/onnxruntime-web
+          cp models/tiny-voca/config.json public/dist/models/tiny-voca/ || true
+          cp models/tiny-voca/onnx/model.onnx public/dist/models/tiny-voca/model.onnx || true
+          cp models/tiny-voca/phonemizer/lexicon.tsv public/dist/models/tiny-voca/phonemizer/ || true
+          cp node_modules/onnxruntime-web/dist/* public/dist/onnxruntime-web/ || true
+          touch public/.nojekyll
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: 'public'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

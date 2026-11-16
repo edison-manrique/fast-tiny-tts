@@ -1,26 +1,40 @@
 // fast-tiny-tts Service Worker - Offline cache for models and assets
-const CACHE_NAME = 'fast-tiny-tts-v2';
-const STATIC_ASSETS = [
-  '/',
-  '/index.html',
-  '/dist/web/tiny-voca.js',
-  '/dist/onnxruntime-web/ort.all.min.mjs',
-  '/dist/onnxruntime-web/ort-wasm-simd-threaded.wasm',
-  '/dist/onnxruntime-web/ort-wasm-simd-threaded.mjs',
-  '/dist/onnxruntime-web/ort-wasm-simd-threaded.jsep.wasm',
-  '/dist/onnxruntime-web/ort-wasm-simd-threaded.jsep.mjs',
-  '/dist/models/tiny-voca/model.onnx',
-  '/dist/models/tiny-voca/config.json',
-  '/dist/models/tiny-voca/phonemizer/lexicon.tsv',
-];
+const CACHE_NAME = 'fast-tiny-tts-v3';
 
-// Install: cache all static assets
+// Install: cache all static assets relative to service worker scope
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      console.log('[SW] Caching static assets...');
-      return cache.addAll(STATIC_ASSETS.map(url => new Request(url, { credentials: 'same-origin' })));
-    }).then(() => self.skipWaiting())
+    (async () => {
+      const scope = self.registration.scope;
+      const assetsToCache = [
+        './',
+        './index.html',
+        './favicon.svg',
+        './dist/web/tiny-voca.js',
+        './dist/onnxruntime-web/ort.all.min.mjs',
+        './dist/onnxruntime-web/ort-wasm-simd-threaded.wasm',
+        './dist/onnxruntime-web/ort-wasm-simd-threaded.mjs',
+        './dist/onnxruntime-web/ort-wasm-simd-threaded.jsep.wasm',
+        './dist/onnxruntime-web/ort-wasm-simd-threaded.jsep.mjs',
+        './dist/models/tiny-voca/model.onnx',
+        './dist/models/tiny-voca/config.json',
+        './dist/models/tiny-voca/phonemizer/lexicon.tsv',
+      ].map((rel) => new URL(rel, scope).href);
+
+      const cache = await caches.open(CACHE_NAME);
+      console.log('[SW] Caching static assets for scope:', scope);
+      await Promise.all(
+        assetsToCache.map(async (url) => {
+          try {
+            const resp = await fetch(url, { credentials: 'same-origin' });
+            if (resp.ok) await cache.put(url, resp);
+          } catch (e) {
+            console.warn('[SW] Cache prefetch skipped for:', url);
+          }
+        })
+      );
+      return self.skipWaiting();
+    })()
   );
 });
 
@@ -29,47 +43,42 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
       return Promise.all(
-        keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))
+        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
       );
     }).then(() => self.clients.claim())
   );
 });
 
-// Fetch: serve from cache first, then network
+// Fetch: cache-first with network fallback
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
-  
-  // Skip non-GET requests
+
+  // Skip non-GET requests and API calls
   if (event.request.method !== 'GET') return;
-  
-  // Skip cross-origin requests
+  if (url.pathname.includes('/api/')) return;
   if (url.origin !== location.origin) return;
 
   event.respondWith(
     caches.match(event.request).then((cached) => {
       if (cached) {
-        // Serve from cache, update in background
-        event.waitUntil(
-          fetch(event.request).then((response) => {
-            if (response.ok) {
-              caches.open(CACHE_NAME).then((cache) => cache.put(event.request, response.clone()));
-            }
-          }).catch(() => {})
-        );
+        // Return cached and update in background
+        fetch(event.request).then((response) => {
+          if (response.ok) {
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, response));
+          }
+        }).catch(() => {});
         return cached;
       }
-      
-      // Not in cache: fetch from network
+
       return fetch(event.request).then((response) => {
         if (response.ok) {
-          const responseClone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseClone));
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
         }
         return response;
       }).catch(() => {
-        // Offline fallback for navigation
         if (event.request.mode === 'navigate') {
-          return caches.match('/');
+          return caches.match('./index.html') || caches.match('./');
         }
       });
     })

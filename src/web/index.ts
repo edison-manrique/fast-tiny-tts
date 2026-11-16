@@ -59,19 +59,30 @@ class WebTinyVoca extends TinyVocaCore implements TinyVocaInstance {
 
   static async create(config: WebTinyVocaConfig = {}): Promise<WebTinyVoca> {
     const loc = typeof window !== 'undefined' ? window.location.href : typeof self !== 'undefined' ? self.location.href : 'http://localhost/';
-    const baseUrl = config.modelPath 
-      ? new URL(config.modelPath, loc).origin + '/' 
-      : '';
-    const localWasmPath = config.wasmPath ?? baseUrl + 'dist/onnxruntime-web/';
+
+    // Resolve model URL relative to document location
+    const rawModelPath = config.modelPath ?? 'dist/models/tiny-voca/model.onnx';
+    const modelUrl = new URL(rawModelPath, loc).href;
+    const modelDir = modelUrl.substring(0, modelUrl.lastIndexOf('/') + 1);
+
+    const configPath = config.configPath 
+      ? new URL(config.configPath, loc).href 
+      : modelDir + 'config.json';
+
+    const phonemizerPath = config.phonemizerPath 
+      ? new URL(config.phonemizerPath, loc).href 
+      : modelDir + 'phonemizer/lexicon.tsv';
+
+    const rawWasmPath = config.wasmPath ?? 'dist/onnxruntime-web/';
+    const wasmUrl = new URL(rawWasmPath, loc).href;
+    const localWasmPath = wasmUrl.endsWith('/') ? wasmUrl : wasmUrl + '/';
     
     if (ort.env && ort.env.wasm) {
       ort.env.wasm.wasmPaths = localWasmPath;
       ort.env.wasm.numThreads = 1; // Single-threaded for maximum browser stability
     }
 
-    const configPath = config.configPath ?? baseUrl + 'config.json';
-    const phonemizerPath = config.phonemizerPath ?? baseUrl + 'lexicon.tsv';
-    const modelPath = config.modelPath ?? baseUrl + 'model.onnx';
+    const modelPath = modelUrl;
 
     // Load config and lexicon in parallel
     const [cfgResp, lexResp] = await Promise.all([

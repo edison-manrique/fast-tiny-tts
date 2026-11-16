@@ -3,20 +3,20 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>fast-tiny-tts · Ultra-fast TTS Studio</title>
-  <meta name="description" content="Ultra-compact English TTS running locally via Bun or client-side via ONNX Runtime Web" />
-  <meta name="theme-color" content="#06070b" />
+  <title>fast-tiny-tts · Modern AI Audio Playground</title>
+  <meta name="description" content="Ultra-compact English TTS running locally via Bun or 100% client-side via ONNX Runtime Web" />
+  <meta name="theme-color" content="#080b11" />
 
   <!-- Favicon -->
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%238b5cf6'/%3E%3Cstop offset='100%25' stop-color='%2306b6d4'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='8' fill='url(%23g)'/%3E%3Cpath d='M12 9l11 7-11 7V9z' fill='%23ffffff'/%3E%3Ccircle cx='24' cy='9' r='2.5' fill='%2310b981'/%3E%3C/svg%3E" />
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-  <link rel="shortcut icon" href="/favicon.svg" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%2300f5a0'/%3E%3Cstop offset='100%25' stop-color='%2300d9f5'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='8' fill='url(%23g)'/%3E%3Cpath d='M12 9l11 7-11 7V9z' fill='%23080b11'/%3E%3Ccircle cx='24' cy='9' r='2.5' fill='%236366f1'/%3E%3C/svg%3E" />
+  <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+  <link rel="shortcut icon" href="./favicon.svg" />
 
-  <!-- Import map for bare specifiers -->
+  <!-- Import map for bare specifiers (uses relative path for GitHub Pages and Localhost) -->
   <script type="importmap">
   {
     "imports": {
-      "onnxruntime-web": "/dist/onnxruntime-web/ort.all.min.mjs"
+      "onnxruntime-web": "./dist/onnxruntime-web/ort.all.min.mjs"
     }
   }
   </script>
@@ -25,37 +25,43 @@
   <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('/sw.js').then(reg => {
+      navigator.serviceWorker.register('./sw.js').then(reg => {
         console.log('[SW] Registered:', reg.scope);
-      }).catch(err => console.warn('[SW] Registration failed:', err));
+      }).catch(err => console.warn('[SW] Registration note:', err));
     });
   }
   </script>
 
+  <!-- Google Fonts: Outfit (modern geometric display) + Fira Code (monospaced telemetry) -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
 
   <style>
     :root {
-      --bg: #06070b;
-      --bg-surface: #0b0d14;
-      --bg-card: rgba(13, 16, 26, 0.82);
-      --bg-card-hover: rgba(18, 23, 38, 0.92);
+      /* Cyber Mint & Deep Sapphire Palette */
+      --bg: #080b12;
+      --bg-surface: #0e1320;
+      --bg-card: rgba(14, 20, 34, 0.85);
+      --bg-card-hover: rgba(20, 28, 48, 0.92);
       --border: rgba(255, 255, 255, 0.08);
-      --border-focus: rgba(139, 92, 246, 0.65);
+      --border-focus: rgba(0, 245, 160, 0.65);
       --border-hover: rgba(255, 255, 255, 0.18);
       --fg: #f8fafc;
       --fg-muted: #94a3b8;
       --fg-subtle: #475569;
-      --primary: #8b5cf6;
-      --primary-light: #a78bfa;
-      --primary-glow: rgba(139, 92, 246, 0.38);
-      --secondary: #06b6d4;
-      --secondary-glow: rgba(6, 182, 212, 0.32);
-      --accent: #10b981;
-      --accent-glow: rgba(16, 185, 129, 0.32);
+      
+      /* Neon Accents */
+      --primary: #00f5a0;
+      --primary-dark: #00c782;
+      --primary-glow: rgba(0, 245, 160, 0.35);
+      --secondary: #00d9f5;
+      --secondary-glow: rgba(0, 217, 245, 0.32);
+      --indigo: #6366f1;
+      --indigo-glow: rgba(99, 102, 241, 0.3);
       --danger: #f43f5e;
+      --warning: #f59e0b;
+
       --radius: 12px;
       --radius-sm: 8px;
       --radius-xs: 5px;
@@ -63,7 +69,7 @@
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    *::selection { background: var(--primary); color: #fff; }
+    *::selection { background: var(--primary); color: #080b12; }
 
     html, body {
       width: 100vw;
@@ -72,22 +78,22 @@
       overflow: hidden;
       background: var(--bg);
       color: var(--fg);
-      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      font-family: 'Outfit', system-ui, -apple-system, sans-serif;
       display: flex;
       flex-direction: column;
     }
 
-    /* Ambient Background Glow */
+    /* Ambient Space Aurora */
     .aurora-bg {
       position: fixed;
       inset: -30%;
       z-index: -1;
       pointer-events: none;
       background:
-        radial-gradient(circle at 12% 18%, rgba(139, 92, 246, 0.15) 0%, transparent 45%),
-        radial-gradient(circle at 88% 82%, rgba(6, 182, 212, 0.12) 0%, transparent 45%),
-        radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.05) 0%, transparent 50%);
-      filter: blur(65px);
+        radial-gradient(circle at 10% 20%, rgba(0, 245, 160, 0.12) 0%, transparent 45%),
+        radial-gradient(circle at 90% 80%, rgba(0, 217, 245, 0.13) 0%, transparent 45%),
+        radial-gradient(circle at 50% 50%, rgba(99, 102, 241, 0.08) 0%, transparent 55%);
+      filter: blur(70px);
     }
 
     .grid-pattern {
@@ -95,82 +101,82 @@
       inset: 0;
       z-index: -1;
       background-image:
-        linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
-      background-size: 28px 28px;
+        linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px);
+      background-size: 30px 30px;
       pointer-events: none;
     }
 
-    /* Topbar Header (Fixed 44px) */
+    /* Topbar Header (Fixed 46px) */
     header {
-      height: 44px;
-      min-height: 44px;
+      height: 46px;
+      min-height: 46px;
       flex-shrink: 0;
       display: flex;
       align-items: center;
       justify-content: space-between;
       padding: 0 16px;
       border-bottom: 1px solid var(--border);
-      background: rgba(6, 7, 11, 0.88);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
+      background: rgba(8, 11, 18, 0.9);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
       z-index: 50;
     }
 
     .brand {
       display: flex;
       align-items: center;
-      gap: 9px;
+      gap: 10px;
       text-decoration: none;
       color: var(--fg);
     }
 
     .brand-icon {
-      width: 26px;
-      height: 26px;
-      border-radius: 7px;
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
       background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
       display: grid;
       place-items: center;
-      box-shadow: 0 2px 10px var(--primary-glow);
+      box-shadow: 0 2px 12px var(--primary-glow);
     }
 
-    .brand-icon svg { width: 14px; height: 14px; fill: white; }
+    .brand-icon svg { width: 14px; height: 14px; fill: #080b12; }
 
     .brand-title {
-      font-size: 0.92rem;
-      font-weight: 700;
+      font-size: 0.95rem;
+      font-weight: 800;
       letter-spacing: -0.02em;
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 7px;
     }
 
     .brand-badge {
-      font-size: 0.6rem;
+      font-size: 0.62rem;
       font-weight: 700;
-      background: rgba(139, 92, 246, 0.15);
-      color: var(--primary-light);
-      border: 1px solid rgba(139, 92, 246, 0.32);
-      padding: 1px 6px;
+      background: rgba(0, 245, 160, 0.14);
+      color: var(--primary);
+      border: 1px solid rgba(0, 245, 160, 0.35);
+      padding: 1px 7px;
       border-radius: 999px;
-      letter-spacing: 0.03em;
+      letter-spacing: 0.04em;
     }
 
     .brand-tag {
-      font-size: 0.6rem;
+      font-size: 0.62rem;
       font-weight: 600;
       color: var(--secondary);
-      background: rgba(6, 182, 212, 0.1);
-      border: 1px solid rgba(6, 182, 212, 0.25);
-      padding: 1px 6px;
+      background: rgba(0, 217, 245, 0.1);
+      border: 1px solid rgba(0, 217, 245, 0.28);
+      padding: 1px 7px;
       border-radius: 999px;
     }
 
     /* Engine Switcher */
     .engine-switcher {
       display: flex;
-      background: rgba(0, 0, 0, 0.5);
+      background: rgba(0, 0, 0, 0.55);
       border: 1px solid var(--border);
       border-radius: 999px;
       padding: 2px;
@@ -181,13 +187,13 @@
       display: flex;
       align-items: center;
       gap: 5px;
-      padding: 4px 12px;
+      padding: 5px 12px;
       border-radius: 999px;
       border: none;
       background: transparent;
       color: var(--fg-muted);
       font-family: inherit;
-      font-size: 0.72rem;
+      font-size: 0.74rem;
       font-weight: 600;
       cursor: pointer;
       transition: all var(--transition);
@@ -200,14 +206,16 @@
     }
 
     .engine-btn.active {
-      background: linear-gradient(135deg, var(--primary) 0%, #6366f1 100%);
-      color: #fff;
-      box-shadow: 0 2px 10px var(--primary-glow);
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+      color: #080b12;
+      font-weight: 700;
+      box-shadow: 0 2px 12px var(--primary-glow);
     }
 
-    .engine-btn.active.web {
-      background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
-      box-shadow: 0 2px 10px var(--secondary-glow);
+    .engine-btn.active.bun {
+      background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%);
+      color: #fff;
+      box-shadow: 0 2px 12px rgba(245, 158, 11, 0.4);
     }
 
     /* Right topbar group */
@@ -223,30 +231,30 @@
       gap: 6px;
       padding: 3px 10px;
       border-radius: 999px;
-      background: rgba(14, 18, 28, 0.85);
+      background: rgba(14, 20, 34, 0.88);
       border: 1px solid var(--border);
-      font-size: 0.7rem;
-      font-weight: 500;
+      font-size: 0.72rem;
+      font-weight: 600;
       color: var(--fg-muted);
     }
 
     .status-dot {
-      width: 6px;
-      height: 6px;
+      width: 7px;
+      height: 7px;
       border-radius: 50%;
-      background: var(--accent);
-      box-shadow: 0 0 7px var(--accent);
+      background: var(--primary);
+      box-shadow: 0 0 8px var(--primary);
     }
 
     .status-badge.loading .status-dot {
-      background: #f59e0b;
-      box-shadow: 0 0 7px #f59e0b;
+      background: var(--warning);
+      box-shadow: 0 0 8px var(--warning);
       animation: pulse 1.2s infinite ease-in-out;
     }
 
     .status-badge.error .status-dot {
       background: var(--danger);
-      box-shadow: 0 0 7px var(--danger);
+      box-shadow: 0 0 8px var(--danger);
     }
 
     @keyframes pulse {
@@ -258,12 +266,12 @@
       display: flex;
       align-items: center;
       gap: 5px;
-      padding: 4px 10px;
+      padding: 4px 11px;
       border-radius: 999px;
       background: rgba(255, 255, 255, 0.04);
       border: 1px solid var(--border);
       color: var(--fg-muted);
-      font-size: 0.7rem;
+      font-size: 0.72rem;
       font-weight: 600;
       text-decoration: none;
       transition: all var(--transition);
@@ -272,7 +280,7 @@
     .github-link:hover {
       background: rgba(255, 255, 255, 0.08);
       color: var(--fg);
-      border-color: rgba(255, 255, 255, 0.2);
+      border-color: rgba(255, 255, 255, 0.22);
     }
 
     .github-link svg { width: 14px; height: 14px; fill: currentColor; }
@@ -281,8 +289,8 @@
     .studio-viewport {
       flex: 1;
       width: 100vw;
-      height: calc(100vh - 44px);
-      max-height: calc(100vh - 44px);
+      height: calc(100vh - 46px);
+      max-height: calc(100vh - 46px);
       padding: 8px 12px;
       display: grid;
       grid-template-columns: minmax(360px, 1.15fr) minmax(360px, 1fr);
@@ -311,7 +319,7 @@
       height: 100%;
       overflow: hidden;
       box-sizing: border-box;
-      box-shadow: 0 16px 40px -12px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 16px 40px -12px rgba(0, 0, 0, 0.6);
     }
 
     /* Column 1: Editor Card */
@@ -328,10 +336,10 @@
     }
 
     .card-label {
-      font-size: 0.68rem;
-      font-weight: 700;
+      font-size: 0.72rem;
+      font-weight: 800;
       text-transform: uppercase;
-      letter-spacing: 0.08em;
+      letter-spacing: 0.09em;
       color: var(--fg-muted);
       display: flex;
       align-items: center;
@@ -339,17 +347,17 @@
     }
 
     .card-label-dot {
-      width: 5px;
-      height: 5px;
+      width: 6px;
+      height: 6px;
       border-radius: 50%;
-      background: var(--primary-light);
-      box-shadow: 0 0 6px var(--primary);
+      background: var(--primary);
+      box-shadow: 0 0 7px var(--primary);
     }
 
     .input-stats {
-      font-size: 0.68rem;
+      font-size: 0.7rem;
       color: var(--fg-subtle);
-      font-family: 'JetBrains Mono', monospace;
+      font-family: 'Fira Code', monospace;
       display: flex;
       align-items: center;
       gap: 7px;
@@ -360,7 +368,8 @@
       border: none;
       color: var(--fg-subtle);
       cursor: pointer;
-      font-size: 0.68rem;
+      font-size: 0.7rem;
+      font-family: inherit;
       transition: color var(--transition);
     }
     .btn-clear:hover { color: var(--fg); }
@@ -377,13 +386,13 @@
       width: 100%;
       height: 100%;
       resize: none;
-      background: rgba(0, 0, 0, 0.4);
+      background: rgba(0, 0, 0, 0.45);
       border: 1px solid var(--border);
       border-radius: var(--radius-sm);
       color: var(--fg);
       padding: 10px 12px;
       font-family: inherit;
-      font-size: 0.86rem;
+      font-size: 0.88rem;
       line-height: 1.55;
       outline: none;
       transition: border-color var(--transition), box-shadow var(--transition);
@@ -415,7 +424,7 @@
       background: rgba(255, 255, 255, 0.035);
       border: 1px solid var(--border);
       color: var(--fg-muted);
-      font-size: 0.68rem;
+      font-size: 0.7rem;
       font-weight: 500;
       cursor: pointer;
       white-space: nowrap;
@@ -424,9 +433,9 @@
     }
 
     .preset-pill:hover {
-      background: rgba(139, 92, 246, 0.16);
-      border-color: rgba(139, 92, 246, 0.45);
-      color: var(--fg);
+      background: rgba(0, 245, 160, 0.15);
+      border-color: rgba(0, 245, 160, 0.45);
+      color: #fff;
     }
 
     /* Voice & Sliders Grid */
@@ -468,22 +477,22 @@
 
     .voice-btn:hover { background: rgba(255, 255, 255, 0.06); color: var(--fg); }
     .voice-btn.active {
-      background: rgba(139, 92, 246, 0.22);
+      background: rgba(0, 245, 160, 0.18);
       border-color: var(--primary);
       color: #fff;
       box-shadow: 0 0 12px var(--primary-glow);
     }
 
-    .voice-btn-name { font-size: 0.82rem; font-weight: 700; }
-    .voice-btn-sub { font-size: 0.58rem; color: var(--fg-subtle); }
-    .voice-btn.active .voice-btn-sub { color: var(--primary-light); }
+    .voice-btn-name { font-size: 0.86rem; font-weight: 800; }
+    .voice-btn-sub { font-size: 0.6rem; color: var(--fg-subtle); }
+    .voice-btn.active .voice-btn-sub { color: var(--primary); }
 
     /* Sliders Strip */
     .sliders-box {
       display: grid;
       grid-template-columns: 1fr 1fr 1fr;
       gap: 7px;
-      background: rgba(0, 0, 0, 0.3);
+      background: rgba(0, 0, 0, 0.35);
       border: 1px solid var(--border);
       border-radius: var(--radius-sm);
       padding: 6px 9px;
@@ -498,14 +507,14 @@
     .slider-header {
       display: flex;
       justify-content: space-between;
-      font-size: 0.63rem;
+      font-size: 0.65rem;
       font-weight: 600;
       color: var(--fg-subtle);
     }
 
     .slider-val {
-      font-family: 'JetBrains Mono', monospace;
-      color: var(--primary-light);
+      font-family: 'Fira Code', monospace;
+      color: var(--primary);
       font-weight: 700;
     }
 
@@ -514,7 +523,7 @@
       appearance: none;
       width: 100%;
       height: 3px;
-      background: rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.12);
       border-radius: 999px;
       outline: none;
       cursor: pointer;
@@ -526,7 +535,7 @@
       width: 12px;
       height: 12px;
       border-radius: 50%;
-      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
       cursor: pointer;
       box-shadow: 0 1px 6px var(--primary-glow);
     }
@@ -539,15 +548,15 @@
       flex-shrink: 0;
       border: none;
       border-radius: var(--radius-sm);
-      background: linear-gradient(135deg, var(--primary) 0%, #6366f1 100%);
-      color: #fff;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+      color: #080b12;
       font-family: inherit;
-      font-size: 0.88rem;
-      font-weight: 700;
+      font-size: 0.92rem;
+      font-weight: 800;
       letter-spacing: 0.01em;
       cursor: pointer;
       transition: all var(--transition);
-      box-shadow: 0 4px 14px var(--primary-glow);
+      box-shadow: 0 4px 16px var(--primary-glow);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -555,7 +564,7 @@
     }
 
     .btn-generate:hover:not(:disabled) {
-      box-shadow: 0 6px 22px var(--primary-glow);
+      box-shadow: 0 6px 24px var(--primary-glow);
       transform: translateY(-1px);
     }
 
@@ -563,25 +572,27 @@
       opacity: 0.5;
       cursor: not-allowed;
       background: rgba(255, 255, 255, 0.08);
+      color: var(--fg-muted);
       box-shadow: none;
     }
 
     .kbd-shortcut {
       font-size: 0.62rem;
-      background: rgba(0, 0, 0, 0.35);
-      border: 1px solid rgba(255, 255, 255, 0.18);
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(0, 0, 0, 0.2);
       border-radius: 3px;
       padding: 1px 5px;
-      color: rgba(255, 255, 255, 0.7);
-      font-family: 'JetBrains Mono', monospace;
+      color: #080b12;
+      font-family: 'Fira Code', monospace;
+      font-weight: 700;
     }
 
     /* Spinner */
     .spinner {
       width: 14px;
       height: 14px;
-      border: 2px solid rgba(255, 255, 255, 0.3);
-      border-top-color: #fff;
+      border: 2px solid rgba(8, 11, 18, 0.35);
+      border-top-color: #080b12;
       border-radius: 50%;
       animation: spin 0.7s linear infinite;
     }
@@ -601,7 +612,7 @@
     }
 
     .badge-pill {
-      font-size: 0.62rem;
+      font-size: 0.64rem;
       font-weight: 700;
       padding: 1px 7px;
       border-radius: 999px;
@@ -610,22 +621,22 @@
     }
 
     .badge-voice {
-      background: rgba(139, 92, 246, 0.2);
-      color: var(--primary-light);
-      border: 1px solid rgba(139, 92, 246, 0.38);
+      background: rgba(0, 245, 160, 0.16);
+      color: var(--primary);
+      border: 1px solid rgba(0, 245, 160, 0.35);
     }
 
     .badge-engine {
-      background: rgba(6, 182, 212, 0.16);
+      background: rgba(0, 217, 245, 0.16);
       color: var(--secondary);
-      border: 1px solid rgba(6, 182, 212, 0.32);
+      border: 1px solid rgba(0, 217, 245, 0.32);
     }
 
     /* Waveform Container */
     .waveform-wrap {
       flex: 1;
       min-height: 75px;
-      background: rgba(0, 0, 0, 0.45);
+      background: rgba(0, 0, 0, 0.5);
       border: 1px solid var(--border);
       border-radius: var(--radius-sm);
       position: relative;
@@ -648,8 +659,8 @@
       bottom: 0;
       left: 0;
       width: 0%;
-      background: rgba(139, 92, 246, 0.15);
-      border-right: 2px solid var(--primary-light);
+      background: rgba(0, 245, 160, 0.12);
+      border-right: 2px solid var(--primary);
       box-shadow: 0 0 12px var(--primary-glow);
       pointer-events: none;
       transition: width 0.03s linear;
@@ -660,7 +671,7 @@
       display: flex;
       align-items: center;
       gap: 10px;
-      background: rgba(0, 0, 0, 0.3);
+      background: rgba(0, 0, 0, 0.35);
       border: 1px solid var(--border);
       border-radius: var(--radius-sm);
       padding: 6px 10px;
@@ -672,13 +683,13 @@
       height: 34px;
       border-radius: 50%;
       border: none;
-      background: linear-gradient(135deg, var(--primary) 0%, #6366f1 100%);
-      color: #fff;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+      color: #080b12;
       display: grid;
       place-items: center;
       cursor: pointer;
       transition: all var(--transition);
-      box-shadow: 0 2px 8px var(--primary-glow);
+      box-shadow: 0 2px 10px var(--primary-glow);
       flex-shrink: 0;
     }
 
@@ -697,13 +708,13 @@
       flex-shrink: 0;
     }
 
-    .btn-secondary:hover { background: rgba(255, 255, 255, 0.05); color: var(--fg); }
+    .btn-secondary:hover { background: rgba(255, 255, 255, 0.06); color: var(--fg); }
     .btn-secondary svg { width: 13px; height: 13px; stroke: currentColor; }
 
     .time-readout {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.76rem;
-      font-weight: 500;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.78rem;
+      font-weight: 600;
       color: var(--fg);
       font-variant-numeric: tabular-nums;
     }
@@ -726,9 +737,9 @@
     }
 
     .btn-download-wav:hover {
-      background: rgba(139, 92, 246, 0.16);
+      background: rgba(0, 245, 160, 0.16);
       border-color: var(--primary);
-      color: var(--primary-light);
+      color: var(--primary);
     }
 
     /* Metrics Grid */
@@ -740,7 +751,7 @@
     }
 
     .metric-cell {
-      background: rgba(0, 0, 0, 0.28);
+      background: rgba(0, 0, 0, 0.35);
       border: 1px solid var(--border);
       border-radius: var(--radius-xs);
       padding: 5px 7px;
@@ -750,21 +761,21 @@
     }
 
     .m-lbl {
-      font-size: 0.55rem;
+      font-size: 0.58rem;
       text-transform: uppercase;
       letter-spacing: 0.06em;
       color: var(--fg-subtle);
-      font-weight: 600;
+      font-weight: 700;
     }
 
     .m-val {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.78rem;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.8rem;
       font-weight: 700;
       color: var(--fg);
     }
 
-    .m-val.green { color: var(--accent); }
+    .m-val.green { color: var(--primary); }
     .m-val.cyan { color: var(--secondary); }
 
     /* Engine Footer Note */
@@ -773,10 +784,10 @@
       align-items: center;
       justify-content: space-between;
       padding: 4px 8px;
-      background: rgba(0, 0, 0, 0.2);
+      background: rgba(0, 0, 0, 0.25);
       border: 1px dashed var(--border);
       border-radius: var(--radius-xs);
-      font-size: 0.65rem;
+      font-size: 0.66rem;
       color: var(--fg-muted);
       flex-shrink: 0;
     }
@@ -789,11 +800,11 @@
       transform: translateX(-50%) translateY(80px);
       z-index: 1000;
       padding: 6px 14px;
-      background: rgba(18, 22, 36, 0.96);
+      background: rgba(14, 20, 34, 0.96);
       border: 1px solid var(--border);
       border-radius: 999px;
       backdrop-filter: blur(16px);
-      box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.7);
       color: var(--fg);
       font-size: 0.74rem;
       font-weight: 600;
@@ -805,16 +816,16 @@
     }
 
     #toast.show { transform: translateX(-50%) translateY(0); }
-    #toast.success { border-color: rgba(16, 185, 129, 0.45); }
-    #toast.info { border-color: rgba(6, 182, 212, 0.45); }
-    #toast.danger { border-color: rgba(244, 63, 94, 0.45); }
+    #toast.success { border-color: rgba(0, 245, 160, 0.5); }
+    #toast.info { border-color: rgba(0, 217, 245, 0.5); }
+    #toast.danger { border-color: rgba(244, 63, 94, 0.5); }
 
     #toast .dot {
       width: 6px;
       height: 6px;
       border-radius: 50%;
-      background: var(--accent);
-      box-shadow: 0 0 6px var(--accent);
+      background: var(--primary);
+      box-shadow: 0 0 6px var(--primary);
     }
     #toast.info .dot { background: var(--secondary); box-shadow: 0 0 6px var(--secondary); }
     #toast.danger .dot { background: var(--danger); box-shadow: 0 0 6px var(--danger); }
@@ -841,23 +852,23 @@
 
   <!-- Header -->
   <header>
-    <a href="/" class="brand">
+    <a href="./" class="brand">
       <div class="brand-icon">
         <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14.5v-9l6 4.5-6 4.5z"/></svg>
       </div>
       <div class="brand-title">
         fast-tiny-tts
-        <span class="brand-badge">24 kHz</span>
-        <span class="brand-tag">4.5M ONNX</span>
+        <span class="brand-badge">PLAYGROUND</span>
+        <span class="brand-tag">24 kHz · 4.5M</span>
       </div>
     </a>
 
     <!-- Engine Mode Toggle -->
     <div class="engine-switcher">
-      <button type="button" class="engine-btn active" id="btnModeBun" title="Inferencia ultra rápida desde el servidor local Bun (Node / Bun ONNX)">
+      <button type="button" class="engine-btn" id="btnModeBun" title="Inferencia ultra rápida desde el servidor local Bun (Node / Bun ONNX)">
         <span>⚡</span> Servidor Bun
       </button>
-      <button type="button" class="engine-btn web" id="btnModeWeb" title="Inferencia 100% cliente en tu navegador via WebAssembly">
+      <button type="button" class="engine-btn active" id="btnModeWeb" title="Inferencia 100% cliente en tu navegador via WebAssembly">
         <span>🌐</span> Web (Navegador)
       </button>
     </div>
@@ -895,13 +906,13 @@
         </div>
 
         <div class="textarea-box">
-          <textarea id="textInput" placeholder="Escribe tu texto en inglés aquí...">Our fast tts engine boosted accuracy by 15.5% with a budget of US$ 320,000 for 175,000 units.</textarea>
+          <textarea id="textInput" placeholder="Escribe tu texto en inglés aquí...">Our fast tts engine boosted accuracy by 15.5% with a total budget of US$ 320,000 for 175,000 units.</textarea>
         </div>
 
         <!-- Preset Chips -->
         <div class="presets-row">
-          <button class="preset-pill" data-t="Our fast tts engine boosted accuracy by 15.5% with a budget of US$ 320,000 for 175,000 units.">⚡ TTS & % (15.5%)</button>
-          <button class="preset-pill" data-t="The total investment was US$ 320,000 for 175,000 units delivered on time.">💰 Finanzas (US$ 320k)</button>
+          <button class="preset-pill" data-t="Our fast tts engine boosted accuracy by 15.5% with a total budget of US$ 320,000 for 175,000 units.">⚡ TTS & % (15.5%)</button>
+          <button class="preset-pill" data-t="The total contract is US$ 320,000 for 175,000 units delivered on time.">💰 Finanzas (US$ 320k)</button>
           <button class="preset-pill" data-t="Q3 operating margin expanded by 24.8% while server costs dropped 50%.">📊 Porcentajes (24.8%)</button>
           <button class="preset-pill" data-t="We saved $320,000 and another $1,250.50 on cloud infrastructure.">🏷️ Precios ($1,250.50)</button>
           <button class="preset-pill" data-t="Hello! Welcome to fast tiny tts, an ultra-fast text to speech engine.">👋 Bienvenida</button>
@@ -959,7 +970,7 @@
         <button class="btn-generate" id="btnGenerate">
           <span class="spinner" id="btnSpinner" style="display:none"></span>
           <span id="btnIcon">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
           </span>
           <span id="btnLabel">Generar Audio</span>
           <span class="kbd-shortcut">Ctrl+↵</span>
@@ -973,13 +984,13 @@
         <div class="player-meta-bar">
           <div style="display:flex;align-items:center;">
             <span class="card-label">
-              <span class="card-label-dot" style="background:var(--secondary);box-shadow:0 0 6px var(--secondary);"></span>
+              <span class="card-label-dot" style="background:var(--secondary);box-shadow:0 0 7px var(--secondary);"></span>
               STUDIO MONITOR
             </span>
             <span class="badge-pill badge-voice" id="tagVoice">F2</span>
-            <span class="badge-pill badge-engine" id="tagEngine">⚡ Bun API</span>
+            <span class="badge-pill badge-engine" id="tagEngine">🌐 Web ONNX</span>
           </div>
-          <span id="audioSummary" style="font-size:0.68rem;color:var(--fg-muted);">24 kHz · Mono</span>
+          <span id="audioSummary" style="font-size:0.7rem;color:var(--fg-muted);">24 kHz · Mono</span>
         </div>
 
         <!-- Waveform Visualizer -->
@@ -1018,7 +1029,7 @@
             <span class="m-val green" id="mInference">— ms</span>
           </div>
           <div class="metric-cell">
-            <span class="m-lbl">RTF (Realtime)</span>
+            <span class="m-lbl">RTF (Velocidad)</span>
             <span class="m-val cyan" id="mRTF">—</span>
           </div>
           <div class="metric-cell">
@@ -1033,8 +1044,8 @@
 
         <!-- Footer Note -->
         <div class="engine-footer-note">
-          <span id="activeEngineDesc">⚡ Inferencia nativa acelerada (Bun/Node)</span>
-          <span style="font-size:0.62rem;color:var(--fg-subtle);">4.5M params · ONNX</span>
+          <span id="activeEngineDesc">🌐 Inferencia 100% en el cliente (ONNX WebAssembly)</span>
+          <span style="font-size:0.64rem;color:var(--fg-subtle);">4.5M params · ONNX</span>
         </div>
       </div>
     </div>
@@ -1049,11 +1060,13 @@
   </div>
 
   <script type="module">
-    import { TinyVoca, encodeWav } from '/dist/web/tiny-voca.js';
+    import { TinyVoca, encodeWav } from './dist/web/tiny-voca.js';
 
     // State
+    const isStaticHost = window.location.hostname.includes('github.io') || window.location.protocol === 'file:';
+
     const state = {
-      mode: 'bun', // 'bun' | 'web'
+      mode: isStaticHost ? 'web' : 'web', // Default to web engine for instant in-browser trial
       voice: 'F2',
       speed: 1.0,
       pitchShift: 0.0,
@@ -1207,6 +1220,11 @@
 
     // Engine switcher
     function setEngineMode(mode) {
+      if (mode === 'bun' && isStaticHost) {
+        showToast('Servidor Bun requiere ejecución local (bun run dev). Usando motor Web.', 'info');
+        mode = 'web';
+      }
+
       state.mode = mode;
       els.btnModeBun.classList.toggle('active', mode === 'bun');
       els.btnModeWeb.classList.toggle('active', mode === 'web');
@@ -1220,7 +1238,6 @@
         els.activeEngineDesc.textContent = '🌐 Inferencia 100% en el cliente (ONNX WebAssembly)';
         els.statusText.textContent = state.webTtsInstance ? 'Web Listo' : 'Web (Cliente)';
         els.tagEngine.textContent = '🌐 Web ONNX';
-        showToast('Modo Web (Cliente) activado', 'info');
         initWebEngineIfNeeded();
       }
     }
@@ -1230,8 +1247,12 @@
 
     // Check Bun availability
     async function checkBunServer() {
+      if (isStaticHost) {
+        state.bunAvailable = false;
+        return false;
+      }
       try {
-        const res = await fetch('/api/voices', { method: 'GET', signal: AbortSignal.timeout(1800) });
+        const res = await fetch('./api/voices', { method: 'GET', signal: AbortSignal.timeout(1800) });
         if (res.ok) {
           state.bunAvailable = true;
           els.statusBadge.className = 'status-badge';
@@ -1252,15 +1273,15 @@
 
       try {
         state.webTtsInstance = await TinyVoca.create({
-          modelPath: '/dist/models/tiny-voca/model.onnx',
-          phonemizerPath: '/dist/models/tiny-voca/phonemizer/lexicon.tsv',
-          configPath: '/dist/models/tiny-voca/config.json',
-          wasmPath: '/dist/onnxruntime-web/',
+          modelPath: './dist/models/tiny-voca/model.onnx',
+          phonemizerPath: './dist/models/tiny-voca/phonemizer/lexicon.tsv',
+          configPath: './dist/models/tiny-voca/config.json',
+          wasmPath: './dist/onnxruntime-web/',
         });
         state.webLoading = false;
         els.statusBadge.className = 'status-badge';
         els.statusText.textContent = 'Web ONNX Listo';
-        showToast('Modelo Web ONNX listo', 'success');
+        showToast('Motor Web ONNX preparado para sintetizar', 'success');
       } catch (err) {
         console.error('[WebTTS Error]:', err);
         state.webLoading = false;
@@ -1284,7 +1305,7 @@
       ctx.scale(dpr, dpr);
 
       ctx.clearRect(0, 0, w, h);
-      ctx.strokeStyle = 'rgba(139, 92, 246, 0.2)';
+      ctx.strokeStyle = 'rgba(0, 245, 160, 0.2)';
       ctx.lineWidth = 1.5;
       ctx.beginPath();
       ctx.moveTo(0, h / 2);
@@ -1333,8 +1354,8 @@
         const y = midY - barH / 2;
 
         const grad = ctx.createLinearGradient(0, y, 0, y + barH);
-        grad.addColorStop(0, 'rgba(139, 92, 246, 0.95)');
-        grad.addColorStop(1, 'rgba(6, 182, 212, 0.75)');
+        grad.addColorStop(0, 'rgba(0, 245, 160, 0.95)');
+        grad.addColorStop(1, 'rgba(0, 217, 245, 0.75)');
 
         ctx.fillStyle = grad;
         ctx.beginPath();
@@ -1372,9 +1393,9 @@
         const y = h - barHeight - 4;
 
         const grad = ctx.createLinearGradient(0, y, 0, h);
-        grad.addColorStop(0, 'rgba(16, 185, 129, 0.85)');
-        grad.addColorStop(0.5, 'rgba(6, 182, 212, 0.6)');
-        grad.addColorStop(1, 'rgba(139, 92, 246, 0.3)');
+        grad.addColorStop(0, 'rgba(0, 245, 160, 0.85)');
+        grad.addColorStop(0.5, 'rgba(0, 217, 245, 0.6)');
+        grad.addColorStop(1, 'rgba(99, 102, 241, 0.3)');
 
         ctx.fillStyle = grad;
         ctx.beginPath();
@@ -1547,7 +1568,7 @@
     // Mode 1: Bun
     async function synthesizeViaBun(text) {
       const t0 = performance.now();
-      const res = await fetch('/api/synthesize', {
+      const res = await fetch('./api/synthesize', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1658,7 +1679,8 @@
       els.audioSummary.textContent = `${meta.audioSeconds.toFixed(2)}s · 24 kHz · Mono`;
       els.timeTotal.textContent = fmtTime(meta.audioSeconds);
       els.mInference.textContent = `${meta.inferenceMs.toFixed(0)} ms`;
-      els.mRTF.textContent = `${meta.rtf.toFixed(3)}×`;
+      const speedup = meta.rtf > 0 ? (1 / meta.rtf).toFixed(0) : '—';
+      els.mRTF.textContent = `${meta.rtf.toFixed(3)}× (${speedup}×)`;
       els.mDuration.textContent = `${meta.audioSeconds.toFixed(2)} s`;
       els.mTokens.textContent = `${meta.words}`;
 
@@ -1703,14 +1725,13 @@
       }
     });
 
-    // Initial check
+    // Initial engine check & startup
     setTimeout(async () => {
-      const ok = await checkBunServer();
-      if (!ok) {
-        console.log('[fast-tiny-tts] Bun server not responding, auto-switching to Web engine');
-        setEngineMode('web');
-      }
+      setEngineMode(isStaticHost ? 'web' : 'web');
       drawIdleWaveform();
+      if (!isStaticHost) {
+        await checkBunServer();
+      }
     }, 200);
   </script>
 </body>

@@ -2,6 +2,7 @@
 
 **Ultra-compact English TTS (Text-to-Speech) running locally via Bun or 100% in-browser via ONNX Runtime Web.**
 
+> **Live Web Playground:** [https://edison-manrique.github.io/fast-tiny-tts/](https://edison-manrique.github.io/fast-tiny-tts/)  
 > **Repository:** [https://github.com/edison-manrique/fast-tiny-tts](https://github.com/edison-manrique/fast-tiny-tts)  
 > **Model:** [tiny-voca](https://huggingface.co/n4ze3m/tiny-voca) by [Muhammed Nazeem](https://huggingface.co/n4ze3m)  
 > **Port & Library:** Edison Manrique Chocce  
