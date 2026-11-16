@@ -69,9 +69,9 @@ bun run build
   }
 </script>
 <script type="module">
-import { TinyVoca } from '/dist/web/tiny-voca.js';
+import { FastTinyTTS } from '/dist/web/fast-tiny-tts.js';
 
-const tts = await TinyVoca.create({
+const tts = await FastTinyTTS.create({
   modelPath: '/dist/models/tiny-voca/model.onnx',
   phonemizerPath: '/dist/models/tiny-voca/phonemizer/lexicon.tsv',
   configPath: '/dist/models/tiny-voca/config.json',
@@ -103,10 +103,10 @@ bun run build
 ```
 
 ```javascript
-import { TinyVoca } from './dist/node/index.js'; // or from 'fast-tiny-tts/node' if linked locally
+import { FastTinyTTS } from './dist/node/index.js'; // or from 'fast-tiny-tts/node'
 import { writeFileSync } from 'fs';
 
-const tts = await TinyVoca.create({
+const tts = await FastTinyTTS.create({
   modelPath: './models/tiny-voca/onnx/model.onnx',
   phonemizerPath: './models/tiny-voca/phonemizer/lexicon.tsv',
   configPath: './models/tiny-voca/config.json',
@@ -141,7 +141,7 @@ writeFileSync('output.wav', result.toWav());
 
 ## 🎛️ API Reference
 
-### `TinyVoca.create(config)`
+### `FastTinyTTS.create(config)` (alias `TinyVoca.create`)
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
@@ -186,7 +186,7 @@ fast-tiny-tts/
 │   ├── index.html            # Web Studio app (100vh modern UI)
 │   ├── favicon.svg           # Studio favicon
 │   └── dist/
-│       ├── web/tiny-voca.js  # Client ES bundle
+│       ├── web/fast-tiny-tts.js # Client ES bundle
 │       ├── onnxruntime-web/  # Local ONNX Runtime Web WASM
 │       └── models/tiny-voca/ # model.onnx + lexicon.tsv
 ├── src/

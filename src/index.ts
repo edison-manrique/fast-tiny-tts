@@ -9,6 +9,7 @@ export type {
   SynthesisResult,
   TinyVocaConfig,
   TinyVocaInstance,
+  FastTinyTTSInstance,
 } from './types.js';
 
 export { Phonemizer } from './phonemizer.js';

@@ -83,7 +83,20 @@ class NodeTinyVoca extends TinyVocaCore implements TinyVocaInstance {
   }
 }
 
-export { NodeTinyVoca as TinyVoca, Phonemizer, TinyVocaCore, encodeWav, toWavBlob, toPcm16 };
-export type { NodeTinyVocaConfig as TinyVocaConfig, SynthesisOptions, SynthesisResult };
+export {
+  NodeTinyVoca as FastTinyTTS,
+  NodeTinyVoca as TinyVoca,
+  Phonemizer,
+  TinyVocaCore,
+  encodeWav,
+  toWavBlob,
+  toPcm16,
+};
+export type {
+  NodeTinyVocaConfig as FastTinyTTSConfig,
+  NodeTinyVocaConfig as TinyVocaConfig,
+  SynthesisOptions,
+  SynthesisResult,
+};
 export * from '../types.js';
 

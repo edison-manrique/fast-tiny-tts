@@ -9,13 +9,15 @@ import { TinyVocaCore } from '../core.js';
 import { encodeWav, toWavBlob, toPcm16 } from '../wav.js';
 import type { TinyVocaConfig, TinyVocaInstance, SynthesisOptions, SynthesisResult } from '../types.js';
 
-export interface WebTinyVocaConfig extends TinyVocaConfig {
+export interface FastTinyTTSConfig extends TinyVocaConfig {
   modelPath?: string;
   phonemizerPath?: string;
   configPath?: string;
   wasmPath?: string;
   executionProviders?: ('webgpu' | 'wasm')[];
 }
+
+export type WebTinyVocaConfig = FastTinyTTSConfig;
 
 interface TensorLike {
   data: any;
@@ -27,7 +29,7 @@ interface SessionLike {
   release?: () => void;
 }
 
-class WebTinyVoca extends TinyVocaCore implements TinyVocaInstance {
+class FastTinyTTS extends TinyVocaCore implements TinyVocaInstance {
   private ortSession: ort.InferenceSession;
 
   private constructor(ortSession: ort.InferenceSession, phonemizer: Phonemizer) {
@@ -57,7 +59,7 @@ class WebTinyVoca extends TinyVocaCore implements TinyVocaInstance {
     this.ortSession = ortSession;
   }
 
-  static async create(config: WebTinyVocaConfig = {}): Promise<WebTinyVoca> {
+  static async create(config: FastTinyTTSConfig = {}): Promise<FastTinyTTS> {
     const loc = typeof window !== 'undefined' ? window.location.href : typeof self !== 'undefined' ? self.location.href : 'http://localhost/';
 
     // Resolve model URL relative to document location
@@ -102,7 +104,7 @@ class WebTinyVoca extends TinyVocaCore implements TinyVocaInstance {
 
     const ortSession = await ort.InferenceSession.create(modelPath, sessionOptions);
 
-    return new WebTinyVoca(ortSession, phonemizer);
+    return new FastTinyTTS(ortSession, phonemizer);
   }
 
   dispose(): void {
@@ -110,7 +112,20 @@ class WebTinyVoca extends TinyVocaCore implements TinyVocaInstance {
   }
 }
 
-export { WebTinyVoca as TinyVoca, Phonemizer, TinyVocaCore, encodeWav, toWavBlob, toPcm16 };
-export type { WebTinyVocaConfig as TinyVocaConfig, SynthesisOptions, SynthesisResult };
+export {
+  FastTinyTTS,
+  FastTinyTTS as TinyVoca,
+  FastTinyTTS as WebTinyVoca,
+  Phonemizer,
+  TinyVocaCore,
+  encodeWav,
+  toWavBlob,
+  toPcm16,
+};
+export type {
+  FastTinyTTSConfig as TinyVocaConfig,
+  SynthesisOptions,
+  SynthesisResult,
+};
 export * from '../types.js';
 

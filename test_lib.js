@@ -2,12 +2,12 @@
  * Test tiny-voca library in Bun
  */
 
-import { TinyVoca } from './dist/node/node/index.js';
+import { FastTinyTTS, TinyVoca } from './dist/node/node/index.js';
 
 async function main() {
-  console.log('Loading tiny-voca...');
+  console.log('Loading fast-tiny-tts...');
   
-  const tts = await TinyVoca.create({
+  const tts = await FastTinyTTS.create({
     modelPath: './dist/models/tiny-voca/model.onnx',
     phonemizerPath: './dist/models/tiny-voca/phonemizer/lexicon.tsv',
     configPath: './dist/models/tiny-voca/config.json',

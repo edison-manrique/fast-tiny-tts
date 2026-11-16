@@ -21,13 +21,35 @@
   }
   </script>
 
-  <!-- Service Worker registration -->
+  <!-- Service Worker registration with auto-update detection -->
   <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('./sw.js').then(reg => {
         console.log('[SW] Registered:', reg.scope);
+        // Force check for updates immediately on load
+        reg.update().catch(() => {});
+
+        // Auto-reload when new service worker is installed
+        reg.addEventListener('updatefound', () => {
+          const newWorker = reg.installing;
+          if (!newWorker) return;
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              console.log('[SW] Nueva versión detectada. Actualizando aplicación...');
+              window.location.reload();
+            }
+          });
+        });
       }).catch(err => console.warn('[SW] Registration note:', err));
+
+      let refreshing = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!refreshing) {
+          refreshing = true;
+          window.location.reload();
+        }
+      });
     });
   }
   </script>
@@ -989,7 +1011,7 @@
   </div>
 
   <script type="module">
-    import { TinyVoca, encodeWav } from './dist/web/tiny-voca.js';
+    import { FastTinyTTS, encodeWav } from './dist/web/fast-tiny-tts.js';
 
     // State
     const isStaticHost = window.location.hostname.includes('github.io') || window.location.protocol === 'file:';
@@ -1201,7 +1223,7 @@
       els.statusText.textContent = 'Cargando ONNX Web…';
 
       try {
-        state.webTtsInstance = await TinyVoca.create({
+        state.webTtsInstance = await FastTinyTTS.create({
           modelPath: './dist/models/tiny-voca/model.onnx',
           phonemizerPath: './dist/models/tiny-voca/phonemizer/lexicon.tsv',
           configPath: './dist/models/tiny-voca/config.json',

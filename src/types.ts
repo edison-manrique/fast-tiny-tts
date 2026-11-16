@@ -43,3 +43,5 @@ export interface TinyVocaInstance {
   readonly voices: Voice[];
 }
 
+export type FastTinyTTSInstance = TinyVocaInstance;
+

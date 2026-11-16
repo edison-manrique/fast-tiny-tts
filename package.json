@@ -4,14 +4,14 @@
   "description": "Ultra-compact English TTS (4.5M params, 24kHz, F2/M2 voices) — runs on CPU, mobile, browser via ONNX. Model by Muhammed Nazeem (n4ze3m/tiny-voca). Port & library by Edison Manrique Chocce.",
   "type": "module",
   "main": "./dist/node/node/index.js",
-  "module": "./dist/web/tiny-voca.js",
-  "browser": "./dist/web/tiny-voca.js",
+  "module": "./dist/web/fast-tiny-tts.js",
+  "browser": "./dist/web/fast-tiny-tts.js",
   "types": "./dist/node/node/index.d.ts",
   "exports": {
     ".": {
       "node": "./dist/node/node/index.js",
-      "import": "./dist/web/tiny-voca.js",
-      "browser": "./dist/web/tiny-voca.js",
+      "import": "./dist/web/fast-tiny-tts.js",
+      "browser": "./dist/web/fast-tiny-tts.js",
       "types": "./dist/node/node/index.d.ts"
     },
     "./node": {
@@ -19,8 +19,8 @@
       "types": "./dist/node/node/index.d.ts"
     },
     "./web": {
-      "import": "./dist/web/tiny-voca.js",
-      "types": "./dist/web/tiny-voca.d.ts"
+      "import": "./dist/web/fast-tiny-tts.js",
+      "types": "./dist/web/fast-tiny-tts.d.ts"
     },
     "./package.json": "./package.json"
   },
@@ -32,11 +32,12 @@
     "build": "bun run build:node && bun run build:web",
     "build:node": "tsc --project tsconfig.node.json",
     "build:web": "tsc --project tsconfig.web.json && bun run bundle:web",
-    "bundle:web": "esbuild src/web/index.ts --bundle --platform=browser --format=esm --outfile=dist/web/tiny-voca.js --external:onnxruntime-web --target=es2022 && node -e \"const fs=require('fs'); fs.mkdirSync('public/dist/web',{recursive:true}); fs.copyFileSync('dist/web/tiny-voca.js','public/dist/web/tiny-voca.js');\"",
+    "bundle:web": "esbuild src/web/index.ts --bundle --platform=browser --format=esm --outfile=dist/web/fast-tiny-tts.js --external:onnxruntime-web --target=es2022 && node -e \"const fs=require('fs'); fs.mkdirSync('public/dist/web',{recursive:true}); fs.copyFileSync('dist/web/fast-tiny-tts.js','public/dist/web/fast-tiny-tts.js'); fs.copyFileSync('dist/web/fast-tiny-tts.js','dist/web/tiny-voca.js'); fs.copyFileSync('dist/web/fast-tiny-tts.js','public/dist/web/tiny-voca.js');\"",
     "build:types": "tsc --project tsconfig.lib.json --emitDeclarationOnly",
     "dev": "bun run src/server.ts",
     "test": "bun run src/cli-test.ts",
     "bench": "bun run src/benchmark.ts",
+    "deploy:pages": "node deploy_pages.cjs",
     "prepublishOnly": "bun run build"
   },
   "keywords": [
