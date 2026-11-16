@@ -90,6 +90,12 @@ const ORDINALS: Record<string, string> = {
   million: 'millionth', billion: 'billionth',
 };
 
+const MONTH_NAMES = [
+  '',
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+];
+
 function intToWords(n: number): string {
   if (n === 0) return 'zero';
   if (n < 0) return 'minus ' + intToWords(-n);
@@ -179,6 +185,36 @@ function normalizeTextForSpeech(text: string): string {
 
   // 1. Normalize ellipsis ... or more to …
   t = t.replace(/\.{3,}/g, '…');
+
+  // 1.1 Honorific titles before names: Dr. -> Doctor, Mr. -> Mister, Mrs. -> Missus, etc.
+  t = t.replace(/\bdr\.\s*/gi, 'Doctor ');
+  t = t.replace(/\bdr\b(?=\s+[A-Z])/gi, 'Doctor');
+  t = t.replace(/\bmr\.\s*/gi, 'Mister ');
+  t = t.replace(/\bmr\b(?=\s+[A-Z])/gi, 'Mister');
+  t = t.replace(/\bmrs\.\s*/gi, 'Missus ');
+  t = t.replace(/\bmrs\b(?=\s+[A-Z])/gi, 'Missus');
+  t = t.replace(/\bms\.\s*/gi, 'Ms ');
+  t = t.replace(/\bprof\.\s*/gi, 'Professor ');
+  t = t.replace(/\bprof\b(?=\s+[A-Z])/gi, 'Professor');
+  t = t.replace(/\bjr\.\s*/gi, 'Junior ');
+  t = t.replace(/\bsr\.\s*/gi, 'Senior ');
+
+  // 1.2 Dates in format M/D, MM/DD, M/D/YYYY, MM/DD/YYYY, M/D/YY (e.g. 3/14 -> March 14th, 12/25/2026 -> December 25th, 2026)
+  t = t.replace(/\b(0?[1-9]|1[0-2])\/(0?[1-9]|[12]\d|3[01])(?:\/(\d{2,4}))?\b/g, (match, mStr, dStr, yStr) => {
+    const m = parseInt(mStr, 10);
+    const d = parseInt(dStr, 10);
+    if (m >= 1 && m <= 12 && d >= 1 && d <= 31) {
+      // Exclude simple fractions like 1/2, 1/3, 2/3, 1/4, 3/4
+      const isFraction = !yStr && mStr.length === 1 && dStr.length === 1 &&
+        ((m === 1 && [2, 3, 4, 8].includes(d)) || (m === 2 && d === 3) || (m === 3 && d === 4));
+      if (!isFraction) {
+        const monthName = MONTH_NAMES[m];
+        const yearPart = yStr ? `, ${yStr.length === 2 ? '20' + yStr : yStr}` : '';
+        return `${monthName} ${d}th${yearPart}`;
+      }
+    }
+    return match;
+  });
 
   // 2. Currencies with US$ / USD: US$ 320,000 / US$320000 / USD 175,000
   t = t.replace(/(?:US\$|USD)\s*(\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?)/gi, (_, num) => {

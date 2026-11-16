@@ -1,5 +1,5 @@
 // fast-tiny-tts Service Worker - Auto-updating offline cache
-const CACHE_NAME = 'fast-tiny-tts-v5';
+const CACHE_NAME = 'fast-tiny-tts-v6';
 
 // Static assets to pre-cache
 const PRECACHE_ASSETS = [
@@ -7,7 +7,6 @@ const PRECACHE_ASSETS = [
   './index.html',
   './favicon.svg',
   './dist/web/fast-tiny-tts.js',
-  './dist/web/tiny-voca.js',
   './dist/onnxruntime-web/ort.all.min.mjs',
   './dist/onnxruntime-web/ort-wasm-simd-threaded.wasm',
   './dist/onnxruntime-web/ort-wasm-simd-threaded.mjs',
@@ -26,7 +25,7 @@ self.addEventListener('install', (event) => {
       const scope = self.registration.scope;
       const cache = await caches.open(CACHE_NAME);
       const urls = PRECACHE_ASSETS.map((rel) => new URL(rel, scope).href);
-      console.log('[SW] Pre-caching static assets (v5)...');
+      console.log('[SW] Pre-caching static assets (v6)...');
       await Promise.all(
         urls.map(async (url) => {
           try {
@@ -101,7 +100,7 @@ self.addEventListener('fetch', (event) => {
   }
 
   // 2. Scripts & JS Code: NETWORK-FIRST with cache fallback (ensures new builds load instantly)
-  if (isScriptOrCode && (url.pathname.includes('fast-tiny-tts') || url.pathname.includes('tiny-voca') || url.pathname.includes('sw.js'))) {
+  if (isScriptOrCode && (url.pathname.includes('fast-tiny-tts') || url.pathname.includes('sw.js'))) {
     event.respondWith(
       (async () => {
         try {
