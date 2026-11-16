@@ -3,7 +3,7 @@
  * para promediar RTF (tiempo de inferencia / duración del audio generado).
  */
 
-import { TinyVoca } from './tts.js';
+import { TinyVoca } from './node/index.js';
 import { Phonemizer } from './phonemizer.js';
 import { join } from 'path';
 import { readFileSync } from 'fs';

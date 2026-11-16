@@ -1,6 +1,6 @@
 /**
- * tiny-voca — Shared types for TTS library
- * Works in Browser (via onnxruntime-web) and Node/Bun (via onnxruntime-node)
+ * fast-tiny-tts — Shared types for TTS library
+ * Works in Browser (via onnxruntime-web) and Node/Bun (via onnxruntime-node).
  */
 
 export type Voice = 'F2' | 'M2';
@@ -14,13 +14,15 @@ export interface SynthesisOptions {
 }
 
 export interface SynthesisResult {
-  audio: Float32Array;   // 24 kHz mono
+  audio: Float32Array;   // 24 kHz mono samples
   sampleRate: number;    // 24000
   durations: Int32Array; // frames per token (256 samples/frame = 10.7ms)
   inferenceMs: number;
   audioSeconds: number;
   rtf: number;           // inference / audio duration
   unknownWords: string[];
+  voice?: Voice;
+  text?: string;
   toWav?: (peak?: number) => Uint8Array;
   toBlob?: (peak?: number) => Blob;
 }
@@ -30,6 +32,7 @@ export interface TinyVocaConfig {
   phonemizerPath?: string; // path or URL to lexicon.tsv
   configPath?: string;   // path or URL to config.json
   wasmPath?: string;     // path to onnxruntime-web WASM (browser only)
+  executionProviders?: ('webgpu' | 'wasm')[];
 }
 
 export interface TinyVocaInstance {
@@ -40,14 +43,3 @@ export interface TinyVocaInstance {
   readonly voices: Voice[];
 }
 
-export type Phoneme = {
-  symbol: string;
-  stress: 0 | 1 | 2;
-};
-
-export type PhonemizeResult = {
-  phones: number[];
-  stress: number[];
-  symbols: string[];
-  unknownWords: string[];
-};

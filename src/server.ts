@@ -12,7 +12,7 @@
 import { serve } from 'bun';
 import { join } from 'path';
 import { readFileSync, existsSync } from 'fs';
-import { TinyVoca } from './tts.js';
+import { TinyVoca } from './node/index.js';
 import { Phonemizer } from './phonemizer.js';
 import { toPcm16 } from './wav.js';
 
@@ -107,6 +107,18 @@ serve({
     // ── Página web -------------------------------------------------
     if (path === '/' || path === '/index.html') {
       return html();
+    }
+
+    // ── Archivos de raíz pública (favicon, service worker) ----------
+    if (path === '/favicon.svg' || path === '/favicon.ico' || path === '/sw.js') {
+      const publicFile = join(PUBLIC_DIR, path.slice(1));
+      if (existsSync(publicFile)) {
+        const file = Bun.file(publicFile);
+        const mime = getMimeType(publicFile);
+        return new Response(file, {
+          headers: cors({ 'Content-Type': mime }),
+        });
+      }
     }
 
     // ── Archivos estáticos (dist, modelos para web) ----------------

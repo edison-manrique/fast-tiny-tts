@@ -3,9 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>fast-tiny-tts · Ultra-fast TTS Studio</title>
-  <meta name="description" content="Ultra-compact English TTS running locally via Bun or client-side in browser via ONNX Runtime Web" />
-  <meta name="theme-color" content="#090a10" />
+  <title>fast-tiny-tts · Studio Fullscreen</title>
+  <meta name="description" content="Ultra-compact English TTS running locally via Bun or client-side via ONNX Runtime Web" />
+  <meta name="theme-color" content="#07080d" />
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%237c5cff'/%3E%3Cstop offset='100%25' stop-color='%2306b6d4'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='8' fill='url(%23g)'/%3E%3Cpath d='M12 9l11 7-11 7V9z' fill='%23ffffff'/%3E%3Ccircle cx='24' cy='9' r='2.5' fill='%2310b981'/%3E%3C/svg%3E" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="shortcut icon" href="/favicon.svg" />
 
   <!-- Import map for bare specifiers -->
   <script type="importmap">
@@ -16,7 +21,7 @@
   }
   </script>
 
-  <!-- Service Worker registration for offline capabilities -->
+  <!-- Service Worker registration -->
   <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
@@ -29,15 +34,14 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
 
   <style>
     :root {
       --bg: #07080d;
       --bg-surface: #0e111a;
-      --bg-card: rgba(18, 22, 34, 0.75);
-      --bg-card-hover: rgba(24, 29, 45, 0.85);
-      --bg-glass: rgba(14, 18, 28, 0.6);
+      --bg-card: rgba(16, 20, 32, 0.75);
+      --bg-card-hover: rgba(22, 28, 44, 0.85);
       --border: rgba(255, 255, 255, 0.08);
       --border-focus: rgba(124, 92, 255, 0.5);
       --border-hover: rgba(255, 255, 255, 0.16);
@@ -52,46 +56,38 @@
       --accent: #10b981;
       --accent-glow: rgba(16, 185, 129, 0.25);
       --danger: #f43f5e;
-      --radius: 16px;
-      --radius-sm: 10px;
-      --radius-xs: 6px;
-      --shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.6);
-      --shadow-glow: 0 0 30px -5px var(--primary-glow);
-      --transition: 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
+      --radius: 12px;
+      --radius-sm: 8px;
+      --radius-xs: 5px;
+      --shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.5);
+      --transition: 160ms cubic-bezier(0.2, 0.8, 0.2, 1);
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
     *::selection { background: var(--primary); color: #fff; }
 
-    body {
+    html, body {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
       background: var(--bg);
       color: var(--fg);
       font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-      min-height: 100vh;
-      overflow-x: hidden;
       display: flex;
       flex-direction: column;
-      position: relative;
     }
 
-    /* Aurora Glow Background */
+    /* Ambient Background Glow */
     .aurora-bg {
       position: fixed;
-      inset: -50%;
+      inset: -30%;
       z-index: -1;
       pointer-events: none;
       background:
-        radial-gradient(circle at 20% 20%, rgba(124, 92, 255, 0.15) 0%, transparent 45%),
-        radial-gradient(circle at 80% 80%, rgba(6, 182, 212, 0.12) 0%, transparent 45%),
-        radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.06) 0%, transparent 50%);
-      filter: blur(60px);
-      animation: auroraShift 25s ease-in-out infinite alternate;
-    }
-
-    @keyframes auroraShift {
-      0% { transform: scale(1) rotate(0deg); }
-      50% { transform: scale(1.05) rotate(2deg); }
-      100% { transform: scale(0.98) rotate(-2deg); }
+        radial-gradient(circle at 15% 20%, rgba(124, 92, 255, 0.12) 0%, transparent 40%),
+        radial-gradient(circle at 85% 85%, rgba(6, 182, 212, 0.1) 0%, transparent 40%),
+        radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.05) 0%, transparent 50%);
+      filter: blur(50px);
     }
 
     .grid-pattern {
@@ -99,96 +95,87 @@
       inset: 0;
       z-index: -1;
       background-image:
-        linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-      background-size: 40px 40px;
+        linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+      background-size: 32px 32px;
       pointer-events: none;
     }
 
-    /* Header */
+    /* Topbar Header (Compact 46px) */
     header {
-      height: 68px;
+      height: 46px;
+      flex-shrink: 0;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 clamp(16px, 4vw, 40px);
+      padding: 0 18px;
       border-bottom: 1px solid var(--border);
-      background: rgba(7, 8, 13, 0.7);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      position: sticky;
-      top: 0;
+      background: rgba(7, 8, 13, 0.85);
+      backdrop-filter: blur(16px);
       z-index: 50;
     }
 
     .brand {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
       text-decoration: none;
       color: var(--fg);
     }
 
     .brand-icon {
-      width: 36px;
-      height: 36px;
-      border-radius: 10px;
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
       background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
       display: grid;
       place-items: center;
-      box-shadow: 0 4px 15px var(--primary-glow);
+      box-shadow: 0 2px 10px var(--primary-glow);
     }
 
-    .brand-icon svg { width: 18px; height: 18px; fill: white; }
+    .brand-icon svg { width: 15px; height: 15px; fill: white; }
 
     .brand-title {
-      font-size: 1.1rem;
+      font-size: 0.95rem;
       font-weight: 700;
       letter-spacing: -0.02em;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 7px;
     }
 
     .brand-tag {
-      font-size: 0.65rem;
+      font-size: 0.62rem;
       font-weight: 700;
       background: rgba(124, 92, 255, 0.15);
       color: var(--primary-light);
       border: 1px solid rgba(124, 92, 255, 0.3);
-      padding: 2px 7px;
+      padding: 1px 6px;
       border-radius: 999px;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.04em;
     }
 
-    /* Engine Selector in Header */
-    .header-center {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
+    /* Engine Switcher */
     .engine-switcher {
       display: flex;
-      background: rgba(0, 0, 0, 0.35);
+      background: rgba(0, 0, 0, 0.4);
       border: 1px solid var(--border);
       border-radius: 999px;
-      padding: 3px;
-      gap: 3px;
+      padding: 2px;
+      gap: 2px;
     }
 
     .engine-btn {
       display: flex;
       align-items: center;
-      gap: 6px;
-      padding: 6px 14px;
+      gap: 5px;
+      padding: 5px 12px;
       border-radius: 999px;
       border: none;
       background: transparent;
       color: var(--fg-muted);
       font-family: inherit;
-      font-size: 0.78rem;
+      font-size: 0.74rem;
       font-weight: 600;
       cursor: pointer;
       transition: all var(--transition);
@@ -203,145 +190,117 @@
     .engine-btn.active {
       background: linear-gradient(135deg, var(--primary) 0%, #6340f0 100%);
       color: #fff;
-      box-shadow: 0 2px 10px var(--primary-glow);
+      box-shadow: 0 2px 8px var(--primary-glow);
     }
 
     .engine-btn.active.web {
       background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
-      box-shadow: 0 2px 10px var(--secondary-glow);
+      box-shadow: 0 2px 8px var(--secondary-glow);
     }
 
-    .engine-btn .icon { font-size: 0.85rem; }
-
-    /* Status indicator */
+    /* Status Badge */
     .status-badge {
       display: flex;
       align-items: center;
-      gap: 8px;
-      padding: 6px 14px;
+      gap: 6px;
+      padding: 4px 10px;
       border-radius: 999px;
       background: rgba(18, 22, 34, 0.8);
       border: 1px solid var(--border);
-      font-size: 0.75rem;
+      font-size: 0.72rem;
       font-weight: 500;
       color: var(--fg-muted);
     }
 
     .status-dot {
-      width: 8px;
-      height: 8px;
+      width: 7px;
+      height: 7px;
       border-radius: 50%;
       background: var(--accent);
-      box-shadow: 0 0 10px var(--accent);
-      transition: all var(--transition);
+      box-shadow: 0 0 8px var(--accent);
     }
 
     .status-badge.loading .status-dot {
       background: #f59e0b;
-      box-shadow: 0 0 10px #f59e0b;
+      box-shadow: 0 0 8px #f59e0b;
       animation: pulse 1.2s infinite ease-in-out;
     }
 
     .status-badge.error .status-dot {
       background: var(--danger);
-      box-shadow: 0 0 10px var(--danger);
+      box-shadow: 0 0 8px var(--danger);
     }
 
     @keyframes pulse {
       0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.4; transform: scale(0.85); }
+      50% { opacity: 0.4; transform: scale(0.8); }
     }
 
-    /* Main Container */
-    main {
+    /* Main Studio Container: 100vh Layout (Split Studio Grid) */
+    .studio-viewport {
       flex: 1;
-      width: 100%;
-      max-width: 900px;
-      margin: 0 auto;
-      padding: clamp(20px, 4vh, 40px) clamp(16px, 3vw, 24px) 60px;
+      width: 100vw;
+      height: calc(100vh - 46px);
+      padding: 10px 14px;
+      display: grid;
+      grid-template-columns: minmax(350px, 1.15fr) minmax(360px, 1fr);
+      gap: 12px;
+      overflow: hidden;
+    }
+
+    /* Studio Columns */
+    .studio-col {
       display: flex;
       flex-direction: column;
-      gap: 24px;
+      height: 100%;
+      gap: 10px;
+      overflow: hidden;
     }
 
-    /* Hero Section */
-    .hero {
-      text-align: center;
-      margin-bottom: 8px;
-    }
-
-    .hero-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 5px 14px;
-      border-radius: 999px;
-      background: rgba(124, 92, 255, 0.1);
-      border: 1px solid rgba(124, 92, 255, 0.25);
-      font-size: 0.75rem;
-      font-weight: 600;
-      color: var(--primary-light);
-      margin-bottom: 14px;
-    }
-
-    .hero h1 {
-      font-size: clamp(2rem, 5vw, 3rem);
-      font-weight: 800;
-      line-height: 1.15;
-      letter-spacing: -0.035em;
-      margin-bottom: 12px;
-    }
-
-    .gradient-text {
-      background: linear-gradient(135deg, #fff 20%, #a78bfa 60%, var(--secondary) 100%);
-      -webkit-background-clip: text;
-      background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .hero p {
-      color: var(--fg-muted);
-      font-size: clamp(0.9rem, 2vw, 1.05rem);
-      max-width: 580px;
-      margin: 0 auto;
-      line-height: 1.6;
-    }
-
-    /* Studio Card */
-    .card {
+    .studio-card {
       background: var(--bg-card);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: clamp(20px, 3.5vw, 32px);
-      box-shadow: var(--shadow);
-      backdrop-filter: blur(25px);
-      -webkit-backdrop-filter: blur(25px);
+      padding: 14px 16px;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      display: flex;
+      flex-direction: column;
       position: relative;
     }
 
-    /* Text Input Area */
-    .input-header {
+    .card-editor {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .card-header-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 10px;
+      flex-shrink: 0;
     }
 
-    .input-label {
-      font-size: 0.75rem;
+    .card-label {
+      font-size: 0.7rem;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.08em;
       color: var(--fg-subtle);
-    }
-
-    .input-actions {
       display: flex;
       align-items: center;
-      gap: 12px;
-      font-size: 0.72rem;
+      gap: 6px;
+    }
+
+    .input-stats {
+      font-size: 0.7rem;
       color: var(--fg-subtle);
       font-family: 'JetBrains Mono', monospace;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
     .btn-clear {
@@ -349,174 +308,158 @@
       border: none;
       color: var(--fg-subtle);
       cursor: pointer;
-      font-size: 0.72rem;
+      font-size: 0.7rem;
       transition: color var(--transition);
-      display: flex;
-      align-items: center;
-      gap: 4px;
     }
-
     .btn-clear:hover { color: var(--fg); }
 
-    .textarea-wrap {
+    /* Textarea */
+    .textarea-box {
+      flex: 1;
+      min-height: 90px;
       position: relative;
+      display: flex;
     }
 
     textarea {
       width: 100%;
-      min-height: 140px;
-      max-height: 320px;
-      resize: vertical;
+      height: 100%;
+      resize: none;
       background: rgba(0, 0, 0, 0.35);
       border: 1px solid var(--border);
       border-radius: var(--radius-sm);
       color: var(--fg);
-      padding: 16px 18px;
+      padding: 10px 14px;
       font-family: inherit;
-      font-size: 0.98rem;
-      line-height: 1.7;
+      font-size: 0.88rem;
+      line-height: 1.6;
       outline: none;
       transition: border-color var(--transition), box-shadow var(--transition);
     }
 
     textarea:focus {
       border-color: var(--border-focus);
-      box-shadow: 0 0 0 3px var(--primary-glow);
+      box-shadow: 0 0 0 2px var(--primary-glow);
     }
 
     textarea::placeholder { color: var(--fg-subtle); opacity: 0.8; }
 
-    /* Preset Prompt Chips */
-    .presets-container {
-      margin-top: 14px;
+    /* Quick Presets Row */
+    .presets-row {
       display: flex;
       align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+      flex-shrink: 0;
     }
+    .presets-row::-webkit-scrollbar { height: 4px; }
+    .presets-row::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
-    .presets-title {
-      font-size: 0.7rem;
-      font-weight: 600;
-      color: var(--fg-subtle);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin-right: 2px;
-    }
-
-    .preset-chip {
-      padding: 6px 13px;
+    .preset-pill {
+      padding: 4px 10px;
       border-radius: 999px;
       background: rgba(255, 255, 255, 0.03);
       border: 1px solid var(--border);
       color: var(--fg-muted);
-      font-size: 0.76rem;
+      font-size: 0.72rem;
       font-weight: 500;
       cursor: pointer;
+      white-space: nowrap;
       transition: all var(--transition);
+      flex-shrink: 0;
     }
 
-    .preset-chip:hover {
+    .preset-pill:hover {
       background: rgba(124, 92, 255, 0.12);
       border-color: rgba(124, 92, 255, 0.4);
       color: var(--fg);
-      transform: translateY(-1px);
     }
 
-    /* Controls Grid */
-    .controls-grid {
-      margin-top: 24px;
+    /* Voice & Acoustic Modulation Grid */
+    .modulation-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 16px;
+      grid-template-columns: 140px 1fr;
+      gap: 10px;
+      flex-shrink: 0;
     }
 
-    .control-box {
+    .voice-select-box {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .voice-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5px;
+      height: 100%;
+    }
+
+    .voice-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      padding: 6px 4px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      color: var(--fg-muted);
+      transition: all var(--transition);
+    }
+
+    .voice-btn:hover { background: rgba(255, 255, 255, 0.06); color: var(--fg); }
+    .voice-btn.active {
+      background: rgba(124, 92, 255, 0.18);
+      border-color: var(--primary);
+      color: #fff;
+      box-shadow: 0 0 10px var(--primary-glow);
+    }
+
+    .voice-btn-name { font-size: 0.85rem; font-weight: 700; }
+    .voice-btn-sub { font-size: 0.6rem; color: var(--fg-subtle); }
+    .voice-btn.active .voice-btn-sub { color: var(--primary-light); }
+
+    /* Sliders Strip */
+    .sliders-box {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
       background: rgba(0, 0, 0, 0.25);
       border: 1px solid var(--border);
       border-radius: var(--radius-sm);
-      padding: 14px 16px;
+      padding: 7px 10px;
+    }
+
+    .slider-item {
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 4px;
     }
 
-    .control-header {
+    .slider-header {
       display: flex;
       justify-content: space-between;
-      align-items: baseline;
-    }
-
-    .control-label {
-      font-size: 0.72rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
+      font-size: 0.65rem;
+      font-weight: 600;
       color: var(--fg-subtle);
     }
 
-    .control-val {
+    .slider-val {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 0.8rem;
-      font-weight: 600;
       color: var(--primary-light);
-    }
-
-    /* Voice selection cards */
-    .voice-options {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-    }
-
-    .voice-card {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 8px 12px;
-      background: rgba(255, 255, 255, 0.02);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-xs);
-      cursor: pointer;
-      transition: all var(--transition);
-      font-family: inherit;
-      color: var(--fg-muted);
-    }
-
-    .voice-card:hover {
-      background: rgba(255, 255, 255, 0.06);
-      color: var(--fg);
-    }
-
-    .voice-card.active {
-      background: rgba(124, 92, 255, 0.15);
-      border-color: var(--primary);
-      color: #fff;
-    }
-
-    .voice-info {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 1px;
-    }
-
-    .voice-name { font-weight: 700; font-size: 0.85rem; }
-    .voice-desc { font-size: 0.65rem; color: var(--fg-subtle); }
-    .voice-card.active .voice-desc { color: var(--primary-light); }
-
-    /* Sliders */
-    .slider-wrap {
-      display: flex;
-      align-items: center;
-      gap: 10px;
+      font-weight: 700;
     }
 
     input[type=range] {
       -webkit-appearance: none;
       appearance: none;
       width: 100%;
-      height: 6px;
+      height: 4px;
       background: rgba(255, 255, 255, 0.08);
       border-radius: 999px;
       outline: none;
@@ -526,113 +469,63 @@
     input[type=range]::-webkit-slider-thumb {
       -webkit-appearance: none;
       appearance: none;
-      width: 18px;
-      height: 18px;
+      width: 14px;
+      height: 14px;
       border-radius: 50%;
       background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
       cursor: pointer;
-      box-shadow: 0 2px 8px var(--primary-glow);
-      transition: transform 150ms ease;
+      box-shadow: 0 1px 6px var(--primary-glow);
     }
 
-    input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.15); }
-    input[type=range]::-moz-range-thumb {
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
-      cursor: pointer;
-      border: none;
-    }
-
-    /* Engine Mode Info Pill */
-    .engine-info-bar {
-      margin-top: 18px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 10px 16px;
-      background: rgba(0, 0, 0, 0.2);
-      border: 1px dashed var(--border);
-      border-radius: var(--radius-sm);
-      font-size: 0.78rem;
-      color: var(--fg-muted);
-    }
-
-    .engine-indicator {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-weight: 600;
-      color: var(--fg);
-    }
-
-    /* Generate Button */
+    /* Primary Generate Button (Always Visible) */
     .btn-generate {
-      margin-top: 20px;
       width: 100%;
-      padding: 16px 24px;
+      height: 42px;
+      flex-shrink: 0;
       border: none;
       border-radius: var(--radius-sm);
       background: linear-gradient(135deg, var(--primary) 0%, #6340f0 100%);
       color: #fff;
       font-family: inherit;
-      font-size: 1rem;
+      font-size: 0.92rem;
       font-weight: 700;
       letter-spacing: 0.01em;
       cursor: pointer;
       transition: all var(--transition);
-      box-shadow: 0 10px 25px -5px var(--primary-glow);
+      box-shadow: 0 6px 18px var(--primary-glow);
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 12px;
+      gap: 10px;
       position: relative;
       overflow: hidden;
     }
 
-    .btn-generate::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
-      transform: translateX(-100%);
-      transition: transform 0.6s ease;
-    }
-
-    .btn-generate:hover:not(:disabled)::before {
-      transform: translateX(100%);
-    }
-
     .btn-generate:hover:not(:disabled) {
-      box-shadow: 0 14px 35px -5px var(--primary-glow);
+      box-shadow: 0 8px 24px var(--primary-glow);
       transform: translateY(-1px);
     }
 
-    .btn-generate:active:not(:disabled) {
-      transform: translateY(1px);
-    }
-
     .btn-generate:disabled {
-      opacity: 0.55;
+      opacity: 0.5;
       cursor: not-allowed;
       background: rgba(255, 255, 255, 0.08);
       box-shadow: none;
     }
 
-    .btn-kbd {
-      font-size: 0.68rem;
-      background: rgba(0, 0, 0, 0.25);
+    .kbd-shortcut {
+      font-size: 0.65rem;
+      background: rgba(0, 0, 0, 0.3);
       border: 1px solid rgba(255, 255, 255, 0.15);
-      border-radius: 4px;
-      padding: 2px 6px;
+      border-radius: 3px;
+      padding: 1px 5px;
       font-family: 'JetBrains Mono', monospace;
     }
 
     .spinner {
-      width: 20px;
-      height: 20px;
-      border: 2.5px solid rgba(255, 255, 255, 0.2);
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255, 255, 255, 0.25);
       border-top-color: #fff;
       border-radius: 50%;
       animation: spin 0.75s linear infinite;
@@ -640,66 +533,48 @@
 
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* Studio Waveform & Player Card */
-    .player-card {
-      margin-top: 8px;
+    /* Right Column: Audio Studio & Monitor */
+    .card-player {
+      flex: 1;
       display: flex;
       flex-direction: column;
-      gap: 18px;
-      animation: fadeIn 0.4s ease-out;
+      gap: 10px;
+      height: 100%;
     }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .player-header {
+    .player-meta-bar {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      flex-wrap: wrap;
-      gap: 10px;
+      flex-shrink: 0;
     }
 
-    .player-title-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .player-title {
-      font-size: 0.95rem;
-      font-weight: 700;
-      letter-spacing: -0.01em;
-    }
-
-    .tag-voice {
+    .badge-pill {
       font-size: 0.68rem;
       font-weight: 700;
-      padding: 3px 8px;
-      border-radius: 6px;
+      padding: 2px 7px;
+      border-radius: 5px;
+    }
+
+    .badge-voice {
       background: rgba(124, 92, 255, 0.15);
       color: var(--primary-light);
       border: 1px solid rgba(124, 92, 255, 0.3);
     }
 
-    .tag-engine {
-      font-size: 0.68rem;
-      font-weight: 700;
-      padding: 3px 8px;
-      border-radius: 6px;
+    .badge-engine {
       background: rgba(6, 182, 212, 0.12);
       color: #38bdf8;
       border: 1px solid rgba(6, 182, 212, 0.3);
+      margin-left: 5px;
     }
 
-    /* Waveform Canvas Container */
-    .waveform-container {
+    /* Waveform Canvas */
+    .waveform-wrap {
+      flex: 1;
+      min-height: 90px;
       position: relative;
-      width: 100%;
-      height: 110px;
-      background: rgba(0, 0, 0, 0.3);
+      background: rgba(0, 0, 0, 0.35);
       border: 1px solid var(--border);
       border-radius: var(--radius-sm);
       overflow: hidden;
@@ -712,7 +587,7 @@
       display: block;
     }
 
-    .waveform-progress-bar {
+    .waveform-cursor {
       position: absolute;
       top: 0;
       bottom: 0;
@@ -724,21 +599,21 @@
       transition: width 50ms linear;
     }
 
-    /* Audio Player Controls Bar */
-    .player-controls {
+    /* Playback Controls Row */
+    .playback-strip {
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: 12px;
       background: rgba(0, 0, 0, 0.25);
       border: 1px solid var(--border);
       border-radius: var(--radius-sm);
-      padding: 12px 18px;
-      flex-wrap: wrap;
+      padding: 8px 12px;
+      flex-shrink: 0;
     }
 
     .btn-play {
-      width: 44px;
-      height: 44px;
+      width: 38px;
+      height: 38px;
       border-radius: 50%;
       border: none;
       background: linear-gradient(135deg, var(--primary) 0%, #6340f0 100%);
@@ -747,138 +622,130 @@
       place-items: center;
       cursor: pointer;
       transition: all var(--transition);
-      box-shadow: 0 4px 15px var(--primary-glow);
+      box-shadow: 0 2px 10px var(--primary-glow);
     }
 
-    .btn-play:hover {
-      transform: scale(1.08);
-      box-shadow: 0 6px 20px var(--primary-glow);
-    }
+    .btn-play:hover { transform: scale(1.06); }
+    .btn-play svg { width: 16px; height: 16px; fill: currentColor; }
 
-    .btn-play svg { width: 18px; height: 18px; fill: currentColor; }
-
-    .btn-secondary-ctrl {
+    .btn-secondary {
       background: transparent;
       border: 1px solid var(--border);
       color: var(--fg-muted);
-      border-radius: 8px;
-      padding: 8px 10px;
+      border-radius: 6px;
+      padding: 6px 8px;
       cursor: pointer;
-      transition: all var(--transition);
       display: grid;
       place-items: center;
     }
 
-    .btn-secondary-ctrl:hover {
-      background: rgba(255, 255, 255, 0.05);
-      color: var(--fg);
-      border-color: var(--border-hover);
-    }
+    .btn-secondary:hover { background: rgba(255, 255, 255, 0.05); color: var(--fg); }
+    .btn-secondary svg { width: 14px; height: 14px; stroke: currentColor; }
 
-    .btn-secondary-ctrl svg { width: 16px; height: 16px; stroke: currentColor; }
-
-    .time-display {
+    .time-readout {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       font-weight: 500;
       color: var(--fg);
       font-variant-numeric: tabular-nums;
-      min-width: 105px;
     }
 
-    .time-sep { color: var(--fg-subtle); margin: 0 3px; }
-
-    .audio-actions {
+    .btn-download-wav {
       margin-left: auto;
       display: flex;
       align-items: center;
-      gap: 10px;
-    }
-
-    .btn-download {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 9px 16px;
+      gap: 6px;
+      padding: 6px 12px;
       background: rgba(255, 255, 255, 0.04);
       border: 1px solid var(--border);
       border-radius: var(--radius-xs);
       color: var(--fg);
       font-family: inherit;
-      font-size: 0.78rem;
+      font-size: 0.75rem;
       font-weight: 600;
       cursor: pointer;
       transition: all var(--transition);
     }
 
-    .btn-download:hover {
+    .btn-download-wav:hover {
       background: rgba(124, 92, 255, 0.15);
       border-color: var(--primary);
       color: var(--primary-light);
     }
 
-    /* Fallback Audio element (hidden by default) */
-    audio#nativeAudio {
-      display: none;
-      width: 100%;
-    }
-
-    /* Metrics Dashboard */
-    .metrics-bar {
+    /* Metrics Grid (Compact) */
+    .metrics-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-      gap: 10px;
-      margin-top: 4px;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      flex-shrink: 0;
     }
 
-    .metric-card {
+    .metric-cell {
       background: rgba(0, 0, 0, 0.2);
       border: 1px solid var(--border);
       border-radius: var(--radius-xs);
-      padding: 10px 14px;
+      padding: 6px 8px;
       display: flex;
       flex-direction: column;
-      gap: 3px;
+      gap: 2px;
     }
 
-    .metric-lbl {
-      font-size: 0.62rem;
+    .m-lbl {
+      font-size: 0.58rem;
       text-transform: uppercase;
       letter-spacing: 0.06em;
       color: var(--fg-subtle);
       font-weight: 600;
     }
 
-    .metric-val {
+    .m-val {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 0.88rem;
+      font-size: 0.82rem;
       font-weight: 700;
       color: var(--fg);
     }
 
-    .metric-val.highlight { color: var(--accent); }
-    .metric-val.blue { color: var(--secondary); }
+    .m-val.green { color: var(--accent); }
+    .m-val.cyan { color: var(--secondary); }
+
+    /* Info Bar at Bottom of Col 2 */
+    .engine-footer-note {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 10px;
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px dashed var(--border);
+      border-radius: var(--radius-xs);
+      font-size: 0.7rem;
+      color: var(--fg-muted);
+      flex-shrink: 0;
+    }
+
+    /* Hidden native audio */
+    audio#nativeAudio { display: none; }
 
     /* Toast Notification */
     #toast {
       position: fixed;
-      bottom: 28px;
+      bottom: 18px;
       left: 50%;
-      transform: translateX(-50%) translateY(100px);
+      transform: translateX(-50%) translateY(80px);
       z-index: 1000;
-      padding: 12px 22px;
+      padding: 8px 16px;
       background: rgba(20, 24, 38, 0.95);
       border: 1px solid var(--border);
       border-radius: 999px;
-      backdrop-filter: blur(20px);
-      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+      backdrop-filter: blur(16px);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
       color: var(--fg);
-      font-size: 0.84rem;
+      font-size: 0.78rem;
       font-weight: 600;
       display: flex;
       align-items: center;
-      gap: 10px;
-      transition: transform 0.35s cubic-bezier(0.2, 0.9, 0.2, 1);
+      gap: 8px;
+      transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.2, 1);
       pointer-events: none;
     }
 
@@ -887,25 +754,30 @@
     #toast.info { border-color: rgba(6, 182, 212, 0.4); }
     #toast.danger { border-color: rgba(244, 63, 94, 0.4); }
 
-    #toast .toast-dot {
-      width: 7px;
-      height: 7px;
+    #toast .dot {
+      width: 6px;
+      height: 6px;
       border-radius: 50%;
       background: var(--accent);
-      box-shadow: 0 0 8px var(--accent);
+      box-shadow: 0 0 6px var(--accent);
     }
-    #toast.info .toast-dot { background: var(--secondary); box-shadow: 0 0 8px var(--secondary); }
-    #toast.danger .toast-dot { background: var(--danger); box-shadow: 0 0 8px var(--danger); }
+    #toast.info .dot { background: var(--secondary); box-shadow: 0 0 6px var(--secondary); }
+    #toast.danger .dot { background: var(--danger); box-shadow: 0 0 6px var(--danger); }
 
-    /* Responsive */
-    @media (max-width: 680px) {
-      header { height: auto; padding: 12px 16px; flex-direction: column; gap: 10px; align-items: stretch; }
-      .header-center { justify-content: center; }
-      .engine-switcher { width: 100%; justify-content: center; }
-      .controls-grid { grid-template-columns: 1fr; }
-      .player-controls { flex-direction: column; align-items: stretch; gap: 12px; }
-      .audio-actions { margin-left: 0; width: 100%; justify-content: space-between; }
-      .metrics-bar { grid-template-columns: 1fr 1fr; }
+    /* Responsive for small screens / mobile */
+    @media (max-width: 768px) {
+      html, body { overflow-y: auto; height: auto; }
+      .studio-viewport {
+        grid-template-columns: 1fr;
+        height: auto;
+        overflow: visible;
+        padding: 10px;
+      }
+      .studio-col { height: auto; overflow: visible; }
+      .card-editor { height: auto; }
+      .card-player { height: auto; }
+      .textarea-box { min-height: 110px; }
+      .metrics-grid { grid-template-columns: 1fr 1fr; }
     }
   </style>
 </head>
@@ -913,6 +785,7 @@
   <div class="aurora-bg"></div>
   <div class="grid-pattern"></div>
 
+  <!-- Topbar (46px) -->
   <header>
     <a href="/" class="brand">
       <div class="brand-icon">
@@ -924,214 +797,191 @@
       </div>
     </a>
 
-    <!-- Engine Toggle Switch -->
-    <div class="header-center">
-      <div class="engine-switcher">
-        <button type="button" class="engine-btn active" id="btnModeBun" title="Inferencia ultra rápida desde el servidor local Bun">
-          <span class="icon">⚡</span> Servidor Bun
-        </button>
-        <button type="button" class="engine-btn web" id="btnModeWeb" title="Inferencia 100% cliente en tu navegador via WebAssembly / ONNX Web">
-          <span class="icon">🌐</span> Web (Navegador)
-        </button>
-      </div>
+    <!-- Engine Mode Toggle -->
+    <div class="engine-switcher">
+      <button type="button" class="engine-btn active" id="btnModeBun" title="Inferencia ultra rápida desde el servidor local Bun">
+        <span>⚡</span> Servidor Bun
+      </button>
+      <button type="button" class="engine-btn web" id="btnModeWeb" title="Inferencia 100% cliente en tu navegador via WebAssembly">
+        <span>🌐</span> Web (Navegador)
+      </button>
     </div>
 
+    <!-- Status Badge -->
     <div class="status-badge" id="statusBadge">
       <div class="status-dot"></div>
       <span id="statusText">Comprobando motor…</span>
     </div>
   </header>
 
-  <main>
-    <section class="hero">
-      <div class="hero-badge">
-        <span>✨ 4.5M Parámetros · Voces F2 / M2 · ONNX Engine</span>
-      </div>
-      <h1>Ultra-fast TTS <span class="gradient-text">Studio</span></h1>
-      <p>Texto a voz de alta fidelidad en inglés. Compatible con inferencia nativa en Bun y 100% en el navegador.</p>
-    </section>
-
-    <section class="card">
-      <div class="input-header">
-        <span class="input-label">Texto en inglés</span>
-        <div class="input-actions">
-          <span id="charCount">0 caracteres</span>
-          <span>·</span>
-          <span id="wordCount">0 palabras</span>
-          <span>·</span>
-          <button class="btn-clear" id="btnClear" type="button">Borrar</button>
-        </div>
-      </div>
-
-      <div class="textarea-wrap">
-        <textarea id="textInput" placeholder="Write or paste your English text here...">The current state of technology is remarkable. Models with only 4.5 million parameters can now generate lifelike speech in real time, directly inside modern web browsers.</textarea>
-      </div>
-
-      <!-- Quick presets -->
-      <div class="presets-container">
-        <span class="presets-title">Ejemplos:</span>
-        <button class="preset-chip" data-t="Hello! Welcome to fast tiny tts, an ultra-fast text to speech engine.">👋 Bienvenida</button>
-        <button class="preset-chip" data-t="The executive meeting was rescheduled to 3:30 pm on Friday, October 14th.">📅 Calendario</button>
-        <button class="preset-chip" data-t="She stood at the edge of the crystal sea, watching the golden horizon melt into twilight.">🌊 Narrativa</button>
-        <button class="preset-chip" data-t="We strictly evaluate latency, acoustic accuracy, and real-time synthesis performance.">⚡ Benchmark</button>
-        <button class="preset-chip" data-t="Did you honestly think I would ever forget such a memorable anniversary?">🎭 Emocional</button>
-      </div>
-
-      <!-- Controls -->
-      <div class="controls-grid">
-        <!-- Voice selector -->
-        <div class="control-box">
-          <div class="control-header">
-            <span class="control-label">Voz</span>
-            <span class="control-val" id="voiceVal">F2 (Femenina)</span>
+  <!-- Fullscreen Studio Viewport (100vh) -->
+  <div class="studio-viewport">
+    <!-- Col 1: Text & Acoustic Synthesis Controls -->
+    <div class="studio-col">
+      <div class="studio-card card-editor">
+        <div class="card-header-row">
+          <span class="card-label">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Texto en inglés
+          </span>
+          <div class="input-stats">
+            <span id="charCount">0 c</span>
+            <span>·</span>
+            <span id="wordCount">0 p</span>
+            <span>·</span>
+            <button class="btn-clear" id="btnClear" type="button">Borrar</button>
           </div>
-          <div class="voice-options">
-            <button type="button" class="voice-card active" id="voiceF2" data-voice="F2">
-              <div class="voice-info">
-                <span class="voice-name">F2</span>
-                <span class="voice-desc">Femenina · Natural</span>
+        </div>
+
+        <div class="textarea-box">
+          <textarea id="textInput" placeholder="Escribe tu texto en inglés aquí...">The current state of technology is remarkable. Models with only 4.5 million parameters can now generate lifelike speech in real time, directly inside modern web browsers.</textarea>
+        </div>
+
+        <!-- Preset Chips -->
+        <div class="presets-row">
+          <button class="preset-pill" data-t="Hello! Welcome to fast tiny tts, an ultra-fast text to speech engine.">👋 Bienvenida</button>
+          <button class="preset-pill" data-t="The executive meeting was rescheduled to 3:30 pm on Friday, October 14th.">📅 Calendario</button>
+          <button class="preset-pill" data-t="She stood at the edge of the crystal sea, watching the golden horizon melt into twilight.">🌊 Narrativa</button>
+          <button class="preset-pill" data-t="We strictly evaluate latency, acoustic accuracy, and real-time synthesis performance.">⚡ Benchmark</button>
+          <button class="preset-pill" data-t="Did you honestly think I would ever forget such a memorable anniversary?">🎭 Emocional</button>
+        </div>
+
+        <!-- Voice & Sliders Grid -->
+        <div class="modulation-grid">
+          <!-- Voice Selector -->
+          <div class="voice-select-box">
+            <span class="card-label">Voz</span>
+            <div class="voice-buttons">
+              <button type="button" class="voice-btn active" id="voiceF2" data-voice="F2">
+                <span class="voice-btn-name">F2</span>
+                <span class="voice-btn-sub">Femenina</span>
+              </button>
+              <button type="button" class="voice-btn" id="voiceM2" data-voice="M2">
+                <span class="voice-btn-name">M2</span>
+                <span class="voice-btn-sub">Masculina</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Sliders -->
+          <div class="sliders-box">
+            <!-- Speed -->
+            <div class="slider-item">
+              <div class="slider-header">
+                <span>Velocidad</span>
+                <span class="slider-val" id="speedVal">1.0×</span>
               </div>
-              <span>✓</span>
-            </button>
-            <button type="button" class="voice-card" id="voiceM2" data-voice="M2">
-              <div class="voice-info">
-                <span class="voice-name">M2</span>
-                <span class="voice-desc">Masc · Expresiva</span>
+              <input type="range" id="sliderSpeed" min="0.5" max="2.0" step="0.05" value="1.0" />
+            </div>
+
+            <!-- Pitch Shift -->
+            <div class="slider-item">
+              <div class="slider-header">
+                <span>Tono</span>
+                <span class="slider-val" id="pitchVal">0.0</span>
               </div>
-              <span></span>
-            </button>
+              <input type="range" id="sliderPitch" min="-1.0" max="1.0" step="0.1" value="0.0" />
+            </div>
+
+            <!-- Pitch Range -->
+            <div class="slider-item">
+              <div class="slider-header">
+                <span>Rango</span>
+                <span class="slider-val" id="rangeVal">1.0</span>
+              </div>
+              <input type="range" id="sliderRange" min="0.0" max="2.0" step="0.1" value="1.0" />
+            </div>
           </div>
         </div>
 
-        <!-- Speed slider -->
-        <div class="control-box">
-          <div class="control-header">
-            <span class="control-label">Velocidad</span>
-            <span class="control-val" id="speedVal">1.0×</span>
-          </div>
-          <div class="slider-wrap">
-            <input type="range" id="sliderSpeed" min="0.5" max="2.0" step="0.05" value="1.0" />
-          </div>
-        </div>
-
-        <!-- Pitch Shift slider -->
-        <div class="control-box">
-          <div class="control-header">
-            <span class="control-label">Tono (Pitch Shift)</span>
-            <span class="control-val" id="pitchVal">0.0</span>
-          </div>
-          <div class="slider-wrap">
-            <input type="range" id="sliderPitch" min="-1.0" max="1.0" step="0.1" value="0.0" />
-          </div>
-        </div>
-
-        <!-- Pitch Range slider -->
-        <div class="control-box">
-          <div class="control-header">
-            <span class="control-label">Rango Expresivo</span>
-            <span class="control-val" id="rangeVal">1.0</span>
-          </div>
-          <div class="slider-wrap">
-            <input type="range" id="sliderRange" min="0.0" max="2.0" step="0.1" value="1.0" />
-          </div>
-        </div>
+        <!-- Primary Generate Action -->
+        <button class="btn-generate" id="btnGenerate">
+          <span class="spinner" id="btnSpinner" style="display:none"></span>
+          <span id="btnIcon">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          </span>
+          <span id="btnLabel">Generar Audio</span>
+          <span class="kbd-shortcut">Ctrl+↵</span>
+        </button>
       </div>
+    </div>
 
-      <!-- Engine info notice -->
-      <div class="engine-info-bar">
-        <div class="engine-indicator">
-          <span id="activeEngineIcon">⚡</span>
-          <span id="activeEngineLabel">Motor: Servidor Bun (Localhost)</span>
-        </div>
-        <span id="activeEngineDesc" style="color:var(--fg-subtle);font-size:0.72rem">Inferencia nativa acelerada</span>
-      </div>
-
-      <!-- Generate Button -->
-      <button class="btn-generate" id="btnGenerate">
-        <span class="spinner" id="btnSpinner" style="display:none"></span>
-        <span id="btnIcon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-        </span>
-        <span id="btnLabel">Generar Audio</span>
-        <span class="btn-kbd">Ctrl+↵</span>
-      </button>
-
-      <!-- Player & Output Area -->
-      <div class="player-card" id="playerArea" style="display:none">
-        <div class="player-header">
-          <div class="player-title-row">
-            <span class="player-title">Audio Sintetizado</span>
-            <span class="tag-voice" id="tagVoice">F2</span>
-            <span class="tag-engine" id="tagEngine">⚡ Bun API</span>
+    <!-- Col 2: Player & Metrics Studio -->
+    <div class="studio-col">
+      <div class="studio-card card-player">
+        <div class="player-meta-bar">
+          <div style="display:flex;align-items:center;">
+            <span class="card-label">Studio Monitor</span>
+            <span class="badge-pill badge-voice" id="tagVoice">F2</span>
+            <span class="badge-pill badge-engine" id="tagEngine">⚡ Bun API</span>
           </div>
-          <div style="font-size:0.75rem;color:var(--fg-muted);" id="audioMetaSummary">—</div>
+          <span id="audioSummary" style="font-size:0.72rem;color:var(--fg-muted);">24 kHz · Mono</span>
         </div>
 
-        <!-- Interactive Waveform Visualizer -->
-        <div class="waveform-container" id="waveformBox" title="Haz clic para avanzar o retroceder en el audio">
+        <!-- Waveform Visualizer -->
+        <div class="waveform-wrap" id="waveformBox" title="Clic para avanzar o retroceder">
           <canvas id="waveCanvas"></canvas>
-          <div class="waveform-progress-bar" id="waveformProgress"></div>
+          <div class="waveform-cursor" id="waveformCursor"></div>
         </div>
 
-        <!-- Player Controls -->
-        <div class="player-controls">
+        <!-- Controls Strip -->
+        <div class="playback-strip">
           <button type="button" class="btn-play" id="btnPlayPause" title="Reproducir / Pausar (Espacio)">
             <svg id="playIcon" viewBox="0 0 24 24"><polygon points="6 4 20 12 6 20 6 4"/></svg>
             <svg id="pauseIcon" viewBox="0 0 24 24" style="display:none"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
           </button>
 
-          <button type="button" class="btn-secondary-ctrl" id="btnStop" title="Detener">
+          <button type="button" class="btn-secondary" id="btnStop" title="Detener (Esc)">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="5" width="14" height="14" rx="2"/></svg>
           </button>
 
-          <div class="time-display">
+          <div class="time-readout">
             <span id="timeCurrent">00:00.0</span>
-            <span class="time-sep">/</span>
+            <span style="color:var(--fg-subtle);margin:0 2px;">/</span>
             <span id="timeTotal">00:00.0</span>
           </div>
 
-          <div class="audio-actions">
-            <button type="button" class="btn-download" id="btnDownload">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              Descargar WAV (24 kHz)
-            </button>
+          <button type="button" class="btn-download-wav" id="btnDownload" title="Descargar WAV 24kHz">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Descargar WAV
+          </button>
+        </div>
+
+        <!-- Metrics Grid -->
+        <div class="metrics-grid">
+          <div class="metric-cell">
+            <span class="m-lbl">Inferencia</span>
+            <span class="m-val green" id="mInference">— ms</span>
+          </div>
+          <div class="metric-cell">
+            <span class="m-lbl">RTF (Realtime)</span>
+            <span class="m-val cyan" id="mRTF">—</span>
+          </div>
+          <div class="metric-cell">
+            <span class="m-lbl">Duración</span>
+            <span class="m-val" id="mDuration">— s</span>
+          </div>
+          <div class="metric-cell">
+            <span class="m-lbl">Palabras</span>
+            <span class="m-val" id="mTokens">—</span>
           </div>
         </div>
 
-        <!-- Hidden Audio Element -->
-        <audio id="nativeAudio" controls></audio>
-
-        <!-- Performance Metrics Dashboard -->
-        <div class="metrics-bar" id="metricsBar">
-          <div class="metric-card">
-            <span class="metric-lbl">Inferencia</span>
-            <span class="metric-val highlight" id="mInference">— ms</span>
-          </div>
-          <div class="metric-card">
-            <span class="metric-lbl">RTF (Real-Time)</span>
-            <span class="metric-val blue" id="mRTF">—</span>
-          </div>
-          <div class="metric-card">
-            <span class="metric-lbl">Duración Audio</span>
-            <span class="metric-val" id="mDuration">— s</span>
-          </div>
-          <div class="metric-card">
-            <span class="metric-lbl">Frecuencia</span>
-            <span class="metric-val">24,000 Hz</span>
-          </div>
-          <div class="metric-card">
-            <span class="metric-lbl">Tokens / Palabras</span>
-            <span class="metric-val" id="mTokens">—</span>
-          </div>
+        <!-- Footer Note -->
+        <div class="engine-footer-note">
+          <span id="activeEngineDesc">⚡ Inferencia nativa acelerada (Bun/Node)</span>
+          <span style="font-size:0.65rem;color:var(--fg-subtle);">4.5M params · ONNX</span>
         </div>
       </div>
-    </section>
-  </main>
+    </div>
+  </div>
 
-  <!-- Toast Notification -->
+  <audio id="nativeAudio"></audio>
+
+  <!-- Toast -->
   <div id="toast">
-    <div class="toast-dot"></div>
-    <span id="toastMsg">Notificación</span>
+    <div class="dot"></div>
+    <span id="toastMsg"></span>
   </div>
 
   <script type="module">
@@ -1149,10 +999,9 @@
       bunAvailable: false,
       webTtsInstance: null,
       webLoading: false,
-      audioBuffer: null, // Web Audio API AudioBuffer
-      audioUrl: null,    // WAV Blob URL
-      audioSamples: null,// Float32Array PCM
-      sampleRate: 24000,
+      audioBuffer: null,
+      audioUrl: null,
+      audioSamples: null,
       duration: 0,
       startTime: 0,
       pauseOffset: 0,
@@ -1164,8 +1013,6 @@
       btnModeWeb: document.getElementById('btnModeWeb'),
       statusBadge: document.getElementById('statusBadge'),
       statusText: document.getElementById('statusText'),
-      activeEngineIcon: document.getElementById('activeEngineIcon'),
-      activeEngineLabel: document.getElementById('activeEngineLabel'),
       activeEngineDesc: document.getElementById('activeEngineDesc'),
       textInput: document.getElementById('textInput'),
       charCount: document.getElementById('charCount'),
@@ -1173,7 +1020,6 @@
       btnClear: document.getElementById('btnClear'),
       voiceF2: document.getElementById('voiceF2'),
       voiceM2: document.getElementById('voiceM2'),
-      voiceVal: document.getElementById('voiceVal'),
       sliderSpeed: document.getElementById('sliderSpeed'),
       speedVal: document.getElementById('speedVal'),
       sliderPitch: document.getElementById('sliderPitch'),
@@ -1184,10 +1030,9 @@
       btnLabel: document.getElementById('btnLabel'),
       btnIcon: document.getElementById('btnIcon'),
       btnSpinner: document.getElementById('btnSpinner'),
-      playerArea: document.getElementById('playerArea'),
       waveCanvas: document.getElementById('waveCanvas'),
       waveformBox: document.getElementById('waveformBox'),
-      waveformProgress: document.getElementById('waveformProgress'),
+      waveformCursor: document.getElementById('waveformCursor'),
       btnPlayPause: document.getElementById('btnPlayPause'),
       playIcon: document.getElementById('playIcon'),
       pauseIcon: document.getElementById('pauseIcon'),
@@ -1197,7 +1042,7 @@
       timeTotal: document.getElementById('timeTotal'),
       tagVoice: document.getElementById('tagVoice'),
       tagEngine: document.getElementById('tagEngine'),
-      audioMetaSummary: document.getElementById('audioMetaSummary'),
+      audioSummary: document.getElementById('audioSummary'),
       mInference: document.getElementById('mInference'),
       mRTF: document.getElementById('mRTF'),
       mDuration: document.getElementById('mDuration'),
@@ -1207,7 +1052,6 @@
       toastMsg: document.getElementById('toastMsg'),
     };
 
-    // Audio Context & Graph
     let audioCtx = null;
     let audioSourceNode = null;
     let analyserNode = null;
@@ -1227,18 +1071,16 @@
       return audioCtx;
     }
 
-    // Toast Utility
-    let toastTimeout = null;
+    let toastTimer = null;
     function showToast(msg, type = 'info') {
-      if (toastTimeout) clearTimeout(toastTimeout);
+      if (toastTimer) clearTimeout(toastTimer);
       els.toastMsg.textContent = msg;
       els.toast.className = type + ' show';
-      toastTimeout = setTimeout(() => {
+      toastTimer = setTimeout(() => {
         els.toast.classList.remove('show');
-      }, 3000);
+      }, 2600);
     }
 
-    // Format time (seconds -> mm:ss.s)
     function fmtTime(sec) {
       if (isNaN(sec) || sec < 0) sec = 0;
       const m = Math.floor(sec / 60);
@@ -1247,40 +1089,37 @@
       return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}.${ds}`;
     }
 
-    // Text counters
-    function updateTextStats() {
+    function updateTextCounters() {
       const text = els.textInput.value;
-      els.charCount.textContent = `${text.length} caracteres`;
+      els.charCount.textContent = `${text.length} c`;
       const words = text.trim() ? text.trim().split(/\s+/).length : 0;
-      els.wordCount.textContent = `${words} palabras`;
+      els.wordCount.textContent = `${words} p`;
     }
 
-    els.textInput.addEventListener('input', updateTextStats);
-    updateTextStats();
+    els.textInput.addEventListener('input', updateTextCounters);
+    updateTextCounters();
 
     els.btnClear.onclick = () => {
       els.textInput.value = '';
       els.textInput.focus();
-      updateTextStats();
+      updateTextCounters();
     };
 
-    // Presets
-    document.querySelectorAll('.preset-chip').forEach(chip => {
-      chip.onclick = () => {
-        els.textInput.value = chip.dataset.t;
-        updateTextStats();
-        showToast('Texto de ejemplo cargado', 'info');
+    // Preset pills
+    document.querySelectorAll('.preset-pill').forEach(pill => {
+      pill.onclick = () => {
+        els.textInput.value = pill.dataset.t;
+        updateTextCounters();
+        showToast('Ejemplo cargado', 'info');
       };
     });
 
-    // Voice selection
+    // Voice switching
     function setVoice(v) {
       state.voice = v;
       els.voiceF2.classList.toggle('active', v === 'F2');
       els.voiceM2.classList.toggle('active', v === 'M2');
-      els.voiceF2.querySelector('span:last-child').textContent = v === 'F2' ? '✓' : '';
-      els.voiceM2.querySelector('span:last-child').textContent = v === 'M2' ? '✓' : '';
-      els.voiceVal.textContent = v === 'F2' ? 'F2 (Femenina)' : 'M2 (Masculina)';
+      els.tagVoice.textContent = v;
     }
 
     els.voiceF2.onclick = () => setVoice('F2');
@@ -1302,22 +1141,21 @@
       els.rangeVal.textContent = state.pitchRange.toFixed(1);
     };
 
-    // Engine Mode switching
+    // Engine switcher
     function setEngineMode(mode) {
       state.mode = mode;
       els.btnModeBun.classList.toggle('active', mode === 'bun');
       els.btnModeWeb.classList.toggle('active', mode === 'web');
 
       if (mode === 'bun') {
-        els.activeEngineIcon.textContent = '⚡';
-        els.activeEngineLabel.textContent = 'Motor: Servidor Bun (Localhost)';
-        els.activeEngineDesc.textContent = 'Inferencia nativa acelerada (C++/Node backend)';
-        els.statusText.textContent = state.bunAvailable ? 'Servidor Bun Listo' : 'Comprobando Bun…';
+        els.activeEngineDesc.textContent = '⚡ Inferencia nativa acelerada (Bun/Node)';
+        els.statusText.textContent = state.bunAvailable ? 'Bun Conectado' : 'Comprobando Bun…';
+        els.tagEngine.textContent = '⚡ Bun API';
         showToast('Modo Servidor Bun activado', 'info');
       } else {
-        els.activeEngineIcon.textContent = '🌐';
-        els.activeEngineLabel.textContent = 'Motor: Web / Cliente (Navegador)';
-        els.activeEngineDesc.textContent = 'Inferencia 100% en el cliente vía ONNX WebAssembly';
+        els.activeEngineDesc.textContent = '🌐 Inferencia 100% en el cliente (ONNX WebAssembly)';
+        els.statusText.textContent = state.webTtsInstance ? 'Web Listo' : 'Web (Cliente)';
+        els.tagEngine.textContent = '🌐 Web ONNX';
         showToast('Modo Web (Cliente) activado', 'info');
         initWebEngineIfNeeded();
       }
@@ -1326,31 +1164,27 @@
     els.btnModeBun.onclick = () => setEngineMode('bun');
     els.btnModeWeb.onclick = () => setEngineMode('web');
 
-    // Auto-detect Bun Server Availability
+    // Check Bun availability
     async function checkBunServer() {
       try {
-        const res = await fetch('/api/voices', { method: 'GET', signal: AbortSignal.timeout(2000) });
+        const res = await fetch('/api/voices', { method: 'GET', signal: AbortSignal.timeout(1800) });
         if (res.ok) {
           state.bunAvailable = true;
           els.statusBadge.className = 'status-badge';
-          if (state.mode === 'bun') {
-            els.statusText.textContent = 'Servidor Bun Conectado';
-          }
+          if (state.mode === 'bun') els.statusText.textContent = 'Bun Listo';
           return true;
         }
-      } catch (e) {
-        // Bun server not reachable
-      }
+      } catch (e) {}
       state.bunAvailable = false;
       return false;
     }
 
-    // Initialize Web Engine (ONNX Runtime Web)
+    // Init Web Engine
     async function initWebEngineIfNeeded() {
       if (state.webTtsInstance || state.webLoading) return;
       state.webLoading = true;
       els.statusBadge.className = 'status-badge loading';
-      els.statusText.textContent = 'Cargando modelo Web (17 MB)…';
+      els.statusText.textContent = 'Cargando ONNX Web…';
 
       try {
         state.webTtsInstance = await TinyVoca.create({
@@ -1361,33 +1195,19 @@
         });
         state.webLoading = false;
         els.statusBadge.className = 'status-badge';
-        els.statusText.textContent = 'Modelo Web Listo';
-        showToast('Modelo Web ONNX cargado correctamente', 'success');
+        els.statusText.textContent = 'Web ONNX Listo';
+        showToast('Modelo Web ONNX listo', 'success');
       } catch (err) {
-        console.error('[WebTTS] Error cargando modelo ONNX:', err);
+        console.error('[WebTTS Error]:', err);
         state.webLoading = false;
         els.statusBadge.className = 'status-badge error';
-        els.statusText.textContent = 'Error al cargar modelo Web';
+        els.statusText.textContent = 'Error modelo Web';
         showToast('Error cargando modelo Web: ' + err.message, 'danger');
       }
     }
 
-    // Startup check
-    async function startup() {
-      const bunOnline = await checkBunServer();
-      if (bunOnline) {
-        setEngineMode('bun');
-        els.statusText.textContent = 'Servidor Bun Listo';
-      } else {
-        // Fallback to Web Client mode
-        setEngineMode('web');
-        showToast('Servidor Bun no detectado. Iniciando motor Web...', 'info');
-      }
-      drawWaveformIdle();
-    }
-
-    // Waveform Visualizer
-    function drawWaveformIdle() {
+    // Waveform Drawing
+    function drawIdleWaveform() {
       const canvas = els.waveCanvas;
       const dpr = window.devicePixelRatio || 1;
       const w = canvas.clientWidth;
@@ -1407,10 +1227,9 @@
       ctx.lineTo(w, h / 2);
       ctx.stroke();
 
-      // Static ambient bars
       const numBars = Math.floor(w / 6);
       for (let i = 0; i < numBars; i++) {
-        const barH = 4 + Math.sin(i * 0.15) * 3;
+        const barH = 3 + Math.sin(i * 0.18) * 3;
         const x = i * 6 + 2;
         ctx.fillStyle = 'rgba(255, 255, 255, 0.04)';
         ctx.fillRect(x, (h - barH) / 2, 3, barH);
@@ -1431,7 +1250,6 @@
 
       ctx.clearRect(0, 0, w, h);
 
-      // Draw peaks
       const numBars = Math.floor(w / 5);
       const step = Math.floor(samples.length / numBars);
       const barW = 3;
@@ -1446,28 +1264,25 @@
           if (v > max) max = v;
         }
 
-        const barH = Math.max(3, max * (h * 0.85));
+        const barH = Math.max(3, max * (h * 0.88));
         const x = i * 5 + 1;
         const y = midY - barH / 2;
 
         const grad = ctx.createLinearGradient(0, y, 0, y + barH);
-        grad.addColorStop(0, 'rgba(124, 92, 255, 0.85)');
-        grad.addColorStop(1, 'rgba(6, 182, 212, 0.65)');
+        grad.addColorStop(0, 'rgba(124, 92, 255, 0.9)');
+        grad.addColorStop(1, 'rgba(6, 182, 212, 0.7)');
 
         ctx.fillStyle = grad;
         ctx.beginPath();
-        ctx.roundRect(x, y, barW, barH, 2);
+        ctx.roundRect(x, y, barW, barH, 1.5);
         ctx.fill();
       }
     }
 
-    // Playback Engine with Web Audio API (Clean & Glitch-Free)
+    // Playback Engine
     function stopPlayback() {
       if (audioSourceNode) {
-        try {
-          audioSourceNode.stop();
-          audioSourceNode.disconnect();
-        } catch (e) {}
+        try { audioSourceNode.stop(); audioSourceNode.disconnect(); } catch (e) {}
         audioSourceNode = null;
       }
       if (animFrameId) {
@@ -1478,12 +1293,12 @@
       state.pauseOffset = 0;
       els.playIcon.style.display = 'block';
       els.pauseIcon.style.display = 'none';
-      els.waveformProgress.style.width = '0%';
+      els.waveformCursor.style.width = '0%';
       els.timeCurrent.textContent = '00:00.0';
       if (state.audioSamples) {
         renderAudioEnvelope(state.audioSamples);
       } else {
-        drawWaveformIdle();
+        drawIdleWaveform();
       }
     }
 
@@ -1509,9 +1324,7 @@
       els.pauseIcon.style.display = 'block';
 
       audioSourceNode.onended = () => {
-        if (state.isPlaying) {
-          stopPlayback();
-        }
+        if (state.isPlaying) stopPlayback();
       };
 
       animatePlayback();
@@ -1547,24 +1360,21 @@
     els.btnPlayPause.onclick = togglePlayPause;
     els.btnStop.onclick = stopPlayback;
 
-    // Scrub / Seek on Waveform
     els.waveformBox.onclick = (e) => {
       if (!state.audioBuffer || !state.duration) return;
       const rect = els.waveformBox.getBoundingClientRect();
-      const clickX = e.clientX - rect.left;
-      const frac = Math.max(0, Math.min(1, clickX / rect.width));
+      const frac = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
       const targetSec = frac * state.duration;
 
       if (state.isPlaying) {
         startPlayback(targetSec);
       } else {
         state.pauseOffset = targetSec;
-        els.waveformProgress.style.width = (frac * 100) + '%';
+        els.waveformCursor.style.width = (frac * 100) + '%';
         els.timeCurrent.textContent = fmtTime(targetSec);
       }
     };
 
-    // Animation loop during playback
     function animatePlayback() {
       if (!state.isPlaying) return;
       const ctx = getAudioContext();
@@ -1576,32 +1386,30 @@
       }
 
       const progressFrac = Math.min(1, current / state.duration);
-      els.waveformProgress.style.width = (progressFrac * 100) + '%';
+      els.waveformCursor.style.width = (progressFrac * 100) + '%';
       els.timeCurrent.textContent = fmtTime(current);
 
       animFrameId = requestAnimationFrame(animatePlayback);
     }
 
-    // Synthesis Handler
+    // Synthesis Trigger
     els.btnGenerate.onclick = async () => {
       const text = els.textInput.value.trim();
       if (!text) {
-        showToast('Escribe texto para sintetizar', 'danger');
+        showToast('Escribe texto para generar', 'danger');
         els.textInput.focus();
         return;
       }
 
-      // Unlock AudioContext immediately within user click gesture
       getAudioContext();
 
-      // UI Loading state
       state.isSynthesizing = true;
       els.btnGenerate.disabled = true;
       els.btnIcon.style.display = 'none';
       els.btnSpinner.style.display = 'inline-block';
       els.btnLabel.textContent = 'Sintetizando…';
       els.statusBadge.className = 'status-badge loading';
-      els.statusText.textContent = state.mode === 'bun' ? 'Sintetizando en Bun…' : 'Inferencia ONNX Web…';
+      els.statusText.textContent = state.mode === 'bun' ? 'Bun sintetizando…' : 'ONNX Web infiriendo…';
 
       stopPlayback();
 
@@ -1615,7 +1423,7 @@
         els.statusText.textContent = 'Listo';
       } catch (err) {
         console.error('[Synthesize Error]:', err);
-        showToast('Error en síntesis: ' + err.message, 'danger');
+        showToast('Error: ' + err.message, 'danger');
         els.statusBadge.className = 'status-badge error';
         els.statusText.textContent = 'Error';
       } finally {
@@ -1627,7 +1435,7 @@
       }
     };
 
-    // Mode 1: Bun Local Server Synthesis
+    // Mode 1: Bun
     async function synthesizeViaBun(text) {
       const t0 = performance.now();
       const res = await fetch('/api/synthesize', {
@@ -1644,49 +1452,43 @@
 
       if (!res.ok) {
         const errJson = await res.json().catch(() => ({}));
-        throw new Error(errJson.error || `Error del servidor HTTP ${res.status}`);
+        throw new Error(errJson.error || `HTTP ${res.status}`);
       }
 
       const clientLatency = performance.now() - t0;
       const wavArrayBuffer = await res.arrayBuffer();
 
-      // Metrics from response headers
       const serverInferenceMs = parseFloat(res.headers.get('X-Inference-Ms')) || clientLatency;
       const audioSeconds = parseFloat(res.headers.get('X-Audio-Seconds')) || (wavArrayBuffer.byteLength / 48000);
       const rtf = parseFloat(res.headers.get('X-RTF')) || (serverInferenceMs / 1000 / audioSeconds);
       const respVoice = res.headers.get('X-Voice') || state.voice;
 
-      // Create audio buffer cleanly from the WAV
       const ctx = getAudioContext();
-      // Slice array buffer to ensure no detaching issues
       const decodedBuffer = await ctx.decodeAudioData(wavArrayBuffer.slice(0));
 
-      // Extract Float32 samples for visualization
       const samples = decodedBuffer.getChannelData(0);
       state.audioSamples = samples;
       state.audioBuffer = decodedBuffer;
       state.duration = decodedBuffer.duration;
-      state.sampleRate = decodedBuffer.sampleRate;
 
-      // Create downloadable Blob URL
       const wavBlob = new Blob([wavArrayBuffer], { type: 'audio/wav' });
       if (state.audioUrl) URL.revokeObjectURL(state.audioUrl);
       state.audioUrl = URL.createObjectURL(wavBlob);
 
-      setupPlayerUI({
+      updatePlayerMonitor({
         voice: respVoice,
-        engine: '⚡ Bun Server',
+        engine: '⚡ Bun API',
         inferenceMs: serverInferenceMs,
         audioSeconds: state.duration,
         rtf: rtf,
         words: text.trim().split(/\s+/).length,
       });
 
-      showToast(`Audio generado en ${serverInferenceMs.toFixed(1)} ms (Bun)`, 'success');
+      showToast(`Audio generado en ${serverInferenceMs.toFixed(0)} ms (Bun)`, 'success');
       startPlayback(0);
     }
 
-    // Mode 2: In-Browser Web Lib (ONNX Runtime Web) Synthesis
+    // Mode 2: Web Client
     async function synthesizeViaWeb(text) {
       if (!state.webTtsInstance) {
         await initWebEngineIfNeeded();
@@ -1706,7 +1508,6 @@
 
       const ctx = getAudioContext();
 
-      // Normalize samples to avoid clipping distortion
       let maxPeak = 0;
       for (let i = 0; i < res.audio.length; i++) {
         const v = Math.abs(res.audio[i]);
@@ -1714,7 +1515,6 @@
       }
       const gain = maxPeak > 0 ? Math.min(1.0, 0.95 / maxPeak) : 1.0;
 
-      // Create Web Audio Buffer DIRECTLY (100% reliable, zero decodeAudioData detachment)
       const audioBuffer = ctx.createBuffer(1, res.audio.length, res.sampleRate);
       const channelData = audioBuffer.getChannelData(0);
       for (let i = 0; i < res.audio.length; i++) {
@@ -1724,15 +1524,13 @@
       state.audioSamples = channelData;
       state.audioBuffer = audioBuffer;
       state.duration = audioBuffer.duration;
-      state.sampleRate = res.sampleRate;
 
-      // Encode WAV bytes for download and native audio
       const wavBytes = encodeWav(res.audio, { sampleRate: res.sampleRate, peak: 0.95 });
       const wavBlob = new Blob([wavBytes.buffer], { type: 'audio/wav' });
       if (state.audioUrl) URL.revokeObjectURL(state.audioUrl);
       state.audioUrl = URL.createObjectURL(wavBlob);
 
-      setupPlayerUI({
+      updatePlayerMonitor({
         voice: state.voice,
         engine: '🌐 Web ONNX',
         inferenceMs: res.inferenceMs,
@@ -1741,27 +1539,23 @@
         words: text.trim().split(/\s+/).length,
       });
 
-      showToast(`Generado en ${res.inferenceMs.toFixed(0)} ms (Web Client)`, 'success');
+      showToast(`Audio generado en ${res.inferenceMs.toFixed(0)} ms (Web)`, 'success');
       startPlayback(0);
     }
 
-    // Setup Output and Visuals
-    function setupPlayerUI(meta) {
-      els.playerArea.style.display = 'flex';
+    function updatePlayerMonitor(meta) {
       els.tagVoice.textContent = meta.voice;
       els.tagEngine.textContent = meta.engine;
-      els.audioMetaSummary.textContent = `${meta.audioSeconds.toFixed(2)}s · 24 kHz · Mono`;
+      els.audioSummary.textContent = `${meta.audioSeconds.toFixed(2)}s · 24 kHz · Mono`;
 
       els.timeCurrent.textContent = '00:00.0';
       els.timeTotal.textContent = fmtTime(meta.audioSeconds);
 
-      // Metrics
-      els.mInference.textContent = `${meta.inferenceMs.toFixed(1)} ms`;
+      els.mInference.textContent = `${meta.inferenceMs.toFixed(0)} ms`;
       els.mRTF.textContent = `${meta.rtf.toFixed(3)}×`;
       els.mDuration.textContent = `${meta.audioSeconds.toFixed(2)} s`;
-      els.mTokens.textContent = `${meta.words} palabras`;
+      els.mTokens.textContent = `${meta.words} p`;
 
-      // Download button
       els.btnDownload.onclick = () => {
         if (!state.audioUrl) return;
         const a = document.createElement('a');
@@ -1771,43 +1565,45 @@
         showToast('Descargando archivo WAV...', 'info');
       };
 
-      // Native audio tag fallback
       els.nativeAudio.src = state.audioUrl;
-
-      // Draw waveform envelope
       renderAudioEnvelope(state.audioSamples);
-      els.playerArea.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
     // Keyboard Shortcuts
     window.addEventListener('keydown', (e) => {
-      // Ctrl+Enter or Cmd+Enter: Generate
       if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
         e.preventDefault();
         els.btnGenerate.click();
       }
-      // Spacebar: Play/Pause (when not typing in textarea)
       if (e.code === 'Space' && document.activeElement !== els.textInput) {
         e.preventDefault();
         togglePlayPause();
       }
-      // Esc: Stop playback
       if (e.key === 'Escape') {
         stopPlayback();
       }
     });
 
-    // Window resize observer for responsive waveform
     window.addEventListener('resize', () => {
       if (state.audioSamples) {
         renderAudioEnvelope(state.audioSamples);
       } else {
-        drawWaveformIdle();
+        drawIdleWaveform();
       }
     });
 
-    // Initialize application
-    startup();
+    // Startup
+    async function initApp() {
+      const bunOnline = await checkBunServer();
+      if (bunOnline) {
+        setEngineMode('bun');
+      } else {
+        setEngineMode('web');
+      }
+      drawIdleWaveform();
+    }
+
+    initApp();
   </script>
 </body>
 </html>

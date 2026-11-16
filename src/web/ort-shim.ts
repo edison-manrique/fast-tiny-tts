@@ -1,6 +1,6 @@
-// lib/web/ort-shim.ts
+// src/web/ort-shim.ts
 // Shim for onnxruntime-web - provides types for TypeScript compilation
-// The actual onnxruntime-web will be loaded at runtime via CDN
+// The actual onnxruntime-web will be loaded at runtime via CDN or local bundle
 
 export interface InferenceSession {
   run(feeds: Record<string, Tensor>): Promise<Record<string, Tensor>>;
@@ -46,7 +46,7 @@ export const env: Env = {
 };
 
 export const InferenceSession: InferenceSessionConstructor = class {
-  static async create() { throw new Error('onnxruntime-web not loaded - use CDN at runtime'); }
+  static async create() { throw new Error('onnxruntime-web not loaded'); }
   async run() { throw new Error('onnxruntime-web not loaded'); }
   release() {}
 } as any;
@@ -54,3 +54,4 @@ export const InferenceSession: InferenceSessionConstructor = class {
 export const Tensor = class {
   constructor(public type: string, public data: any, public dims: readonly number[]) {}
 } as any;
+

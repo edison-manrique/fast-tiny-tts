@@ -7,7 +7,7 @@
     "declaration": true,
     "declarationMap": false,
     "outDir": "./dist/web",
-    "rootDir": "./lib",
+    "rootDir": "./src",
     "strict": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
@@ -18,9 +18,9 @@
     "sourceMap": false,
     "baseUrl": ".",
     "paths": {
-      "onnxruntime-web": ["./lib/web/ort-shim.ts"]
+      "onnxruntime-web": ["./src/web/ort-shim.ts"]
     }
   },
-  "include": ["lib/web/**/*.ts", "lib/types.ts", "lib/phonemizer.ts", "lib/core.ts", "lib/wav.ts"],
-  "exclude": ["lib/node/**/*", "node_modules"]
+  "include": ["src/web/**/*.ts", "src/types.ts", "src/phonemizer.ts", "src/core.ts", "src/wav.ts"],
+  "exclude": ["src/node/**/*", "node_modules"]
 }

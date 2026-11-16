@@ -1,15 +1,13 @@
 /**
- * tiny-voca — Web/Browser entry point
- * 
- * This will be bundled by esbuild with onnxruntime-web as external.
- * The shim at lib/web/ort-shim.ts provides types for TypeScript compilation.
+ * fast-tiny-tts — Web/Browser Platform Entry Point
+ * Bundled by esbuild with onnxruntime-web as external.
  */
 
 import * as ort from 'onnxruntime-web';
 import { Phonemizer } from '../phonemizer.js';
 import { TinyVocaCore } from '../core.js';
-import { encodeWav, toWavBlob } from '../wav.js';
-import type { TinyVocaConfig, TinyVocaInstance } from '../types.js';
+import { encodeWav, toWavBlob, toPcm16 } from '../wav.js';
+import type { TinyVocaConfig, TinyVocaInstance, SynthesisOptions, SynthesisResult } from '../types.js';
 
 export interface WebTinyVocaConfig extends TinyVocaConfig {
   modelPath?: string;
@@ -26,6 +24,7 @@ interface TensorLike {
 
 interface SessionLike {
   run(feeds: Record<string, TensorLike>): Promise<Record<string, TensorLike>>;
+  release?: () => void;
 }
 
 class WebTinyVoca extends TinyVocaCore implements TinyVocaInstance {
@@ -50,6 +49,9 @@ class WebTinyVoca extends TinyVocaCore implements TinyVocaInstance {
         }
         return output;
       },
+      release: () => {
+        ortSession.release();
+      },
     };
     super(session, phonemizer);
     this.ortSession = ortSession;
@@ -64,7 +66,7 @@ class WebTinyVoca extends TinyVocaCore implements TinyVocaInstance {
     
     if (ort.env && ort.env.wasm) {
       ort.env.wasm.wasmPaths = localWasmPath;
-      ort.env.wasm.numThreads = 1; // Single-threaded for maximum compatibility
+      ort.env.wasm.numThreads = 1; // Single-threaded for maximum browser stability
     }
 
     const configPath = config.configPath ?? baseUrl + 'config.json';
@@ -97,6 +99,7 @@ class WebTinyVoca extends TinyVocaCore implements TinyVocaInstance {
   }
 }
 
-export { WebTinyVoca as TinyVoca, Phonemizer, TinyVocaCore, encodeWav, toWavBlob };
-export type { WebTinyVocaConfig as TinyVocaConfig };
+export { WebTinyVoca as TinyVoca, Phonemizer, TinyVocaCore, encodeWav, toWavBlob, toPcm16 };
+export type { WebTinyVocaConfig as TinyVocaConfig, SynthesisOptions, SynthesisResult };
 export * from '../types.js';
+
