@@ -1,0 +1,1777 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>fast-tiny-tts · Studio Profesional</title>
+  <meta name="description" content="Ultra-compact English TTS running locally via Bun or client-side via ONNX Runtime Web" />
+  <meta name="theme-color" content="#0b0f19" />
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232563eb'/%3E%3Cpath d='M12 9l11 7-11 7V9z' fill='%23ffffff'/%3E%3Ccircle cx='24' cy='9' r='2.5' fill='%2360a5fa'/%3E%3C/svg%3E" />
+  <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+  <link rel="shortcut icon" href="./favicon.svg" />
+
+  <!-- Import map for bare specifiers -->
+  <script type="importmap">
+  {
+    "imports": {
+      "onnxruntime-web": "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.20.0/dist/ort.all.min.mjs"
+    }
+  }
+  </script>
+
+  <!-- Service Worker registration with auto-update detection -->
+  <script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js').then(reg => {
+        console.log('[SW] Registered:', reg.scope);
+        // Force check for updates immediately on load
+        reg.update().catch(() => {});
+
+        // Auto-reload when new service worker is installed
+        reg.addEventListener('updatefound', () => {
+          const newWorker = reg.installing;
+          if (!newWorker) return;
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              console.log('[SW] Nueva versión detectada. Actualizando aplicación...');
+              window.location.reload();
+            }
+          });
+        });
+      }).catch(err => console.warn('[SW] Registration note:', err));
+
+      let refreshing = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!refreshing) {
+          refreshing = true;
+          window.location.reload();
+        }
+      });
+    });
+  }
+  </script>
+
+  <!-- Google Fonts: Inter (sober, clean, professional) + JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      /* Sober Corporate Dark Theme (Soft Blue) */
+      --bg: #0b0f19;
+      --bg-surface: #111827;
+      --bg-card: #111827;
+      --border: rgba(255, 255, 255, 0.08);
+      --border-hover: rgba(255, 255, 255, 0.16);
+      --border-focus: #3b82f6;
+      --fg: #f8fafc;
+      --fg-muted: #94a3b8;
+      --fg-subtle: #64748b;
+      
+      /* Professional Soft Blue */
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --primary-active: #1d4ed8;
+      --primary-light: #60a5fa;
+      --primary-soft: rgba(59, 130, 246, 0.12);
+      
+      --accent: #10b981;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+
+      --radius: 10px;
+      --radius-sm: 6px;
+      --radius-xs: 4px;
+      --transition: 120ms ease;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
+
+    textarea, input[type=text], .selectable {
+      -webkit-user-select: text !important;
+      -moz-user-select: text !important;
+      -ms-user-select: text !important;
+      user-select: text !important;
+    }
+
+    *::selection { background: var(--primary); color: #ffffff; }
+
+    /* Clean dark scrollbars for any scrollable region */
+    ::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.12);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.25);
+    }
+
+    html, body {
+      width: 100vw;
+      height: 100vh;
+      max-height: 100vh;
+      overflow: hidden;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Topbar Header (Fixed 44px, clean slate) */
+    header {
+      height: 44px;
+      min-height: 44px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      border-bottom: 1px solid var(--border);
+      background: #0d131f;
+      z-index: 50;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: var(--fg);
+    }
+
+    .brand-icon {
+      width: 26px;
+      height: 26px;
+      border-radius: 6px;
+      background: var(--primary-hover);
+      display: grid;
+      place-items: center;
+    }
+
+    .brand-icon svg { width: 14px; height: 14px; fill: #ffffff; }
+
+    .brand-title {
+      font-size: 0.92rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .brand-badge {
+      font-size: 0.62rem;
+      font-weight: 600;
+      background: var(--primary-soft);
+      color: var(--primary-light);
+      border: 1px solid rgba(59, 130, 246, 0.25);
+      padding: 1px 7px;
+      border-radius: 999px;
+    }
+
+    .brand-tag {
+      font-size: 0.62rem;
+      font-weight: 500;
+      color: var(--fg-muted);
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      padding: 1px 7px;
+      border-radius: 999px;
+    }
+
+    /* Engine Switcher */
+    .engine-switcher {
+      display: flex;
+      background: #080c14;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 2px;
+      gap: 2px;
+    }
+
+    .engine-btn {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 12px;
+      border-radius: 999px;
+      border: none;
+      background: transparent;
+      color: var(--fg-muted);
+      font-family: inherit;
+      font-size: 0.72rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all var(--transition);
+      white-space: nowrap;
+    }
+
+    .engine-btn:hover:not(.active) {
+      color: var(--fg);
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .engine-btn.active {
+      background: var(--primary-hover);
+      color: #ffffff;
+      font-weight: 600;
+    }
+
+    /* Right topbar group */
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 9px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
+      font-size: 0.7rem;
+      font-weight: 500;
+      color: var(--fg-muted);
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+
+    .status-badge.loading .status-dot {
+      background: var(--warning);
+      animation: pulse 1.2s infinite ease-in-out;
+    }
+
+    .status-badge.error .status-dot {
+      background: var(--danger);
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.3; transform: scale(0.7); }
+    }
+
+    .github-link {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border);
+      color: var(--fg-muted);
+      font-size: 0.72rem;
+      font-weight: 500;
+      text-decoration: none;
+      transition: all var(--transition);
+    }
+
+    .github-link:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--fg);
+      border-color: var(--border-hover);
+    }
+
+    .github-link svg { width: 14px; height: 14px; fill: currentColor; }
+
+    /* Main Studio Container: 100vh Split Grid */
+    .studio-viewport {
+      flex: 1;
+      width: 100vw;
+      height: calc(100vh - 44px);
+      max-height: calc(100vh - 44px);
+      padding: 8px 12px;
+      display: grid;
+      grid-template-columns: minmax(360px, 1.15fr) minmax(360px, 1fr);
+      gap: 10px;
+      overflow: hidden;
+      box-sizing: border-box;
+    }
+
+    .studio-col {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .studio-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px 14px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      height: 100%;
+      overflow: hidden;
+      box-sizing: border-box;
+    }
+
+    /* Column 1: Editor Card */
+    .card-editor {
+      gap: 7px;
+    }
+
+    .card-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+      height: 22px;
+    }
+
+    .card-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--fg-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .input-stats {
+      font-size: 0.68rem;
+      color: var(--fg-subtle);
+      font-family: 'JetBrains Mono', monospace;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .btn-clear {
+      background: transparent;
+      border: none;
+      color: var(--fg-subtle);
+      cursor: pointer;
+      font-size: 0.68rem;
+      font-family: inherit;
+      transition: color var(--transition);
+    }
+    .btn-clear:hover { color: var(--fg); }
+
+    /* Textarea Box (Flex grow) */
+    .textarea-box {
+      flex: 1;
+      min-height: 55px;
+      position: relative;
+      display: flex;
+    }
+
+    textarea {
+      width: 100%;
+      height: 100%;
+      resize: none;
+      background: #0d131f;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--fg);
+      padding: 10px 12px;
+      font-family: inherit;
+      font-size: 0.88rem;
+      line-height: 1.55;
+      outline: none;
+      transition: border-color var(--transition);
+    }
+
+    textarea:focus {
+      border-color: var(--border-focus);
+    }
+
+    textarea::placeholder { color: var(--fg-subtle); opacity: 0.8; }
+
+    /* Quick Preset Chips */
+    .presets-row {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      overflow-x: auto;
+      overflow-y: hidden;
+      padding: 2px 0;
+      flex-shrink: 0;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    .presets-row::-webkit-scrollbar {
+      display: none;
+      width: 0;
+      height: 0;
+    }
+
+    .preset-pill {
+      padding: 3px 9px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.035);
+      border: 1px solid var(--border);
+      color: var(--fg-muted);
+      font-size: 0.68rem;
+      font-weight: 500;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all var(--transition);
+      flex-shrink: 0;
+    }
+
+    .preset-pill:hover {
+      background: var(--primary-soft);
+      border-color: rgba(59, 130, 246, 0.35);
+      color: var(--fg);
+    }
+
+    /* Voice & Sliders Grid */
+    .modulation-grid {
+      display: grid;
+      grid-template-columns: 140px 1fr;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .voice-select-box {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .voice-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5px;
+      height: 100%;
+    }
+
+    .voice-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      padding: 5px 3px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      color: var(--fg-muted);
+      transition: all var(--transition);
+    }
+
+    .voice-btn:hover { background: rgba(255, 255, 255, 0.05); color: var(--fg); }
+    .voice-btn.active {
+      background: var(--primary-soft);
+      border-color: var(--primary);
+      color: var(--fg);
+    }
+
+    .voice-btn-name { font-size: 0.84rem; font-weight: 700; }
+    .voice-btn-sub { font-size: 0.6rem; color: var(--fg-subtle); }
+    .voice-btn.active .voice-btn-sub { color: var(--primary-light); }
+
+    /* Sliders Strip */
+    .sliders-box {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 7px;
+      background: #0d131f;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 6px 9px;
+    }
+
+    .slider-item {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .slider-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.63rem;
+      font-weight: 600;
+      color: var(--fg-subtle);
+    }
+
+    .slider-val {
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--primary-light);
+      font-weight: 600;
+    }
+
+    input[type=range] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 3px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 999px;
+      outline: none;
+      cursor: pointer;
+    }
+
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--primary);
+      cursor: pointer;
+    }
+
+    /* Primary Generate Button (Clean Solid Blue) */
+    .btn-generate {
+      width: 100%;
+      height: 38px;
+      min-height: 38px;
+      flex-shrink: 0;
+      border: none;
+      border-radius: var(--radius-sm);
+      background: var(--primary-hover);
+      color: #ffffff;
+      font-family: inherit;
+      font-size: 0.88rem;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      cursor: pointer;
+      transition: background var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-generate:hover:not(:disabled) {
+      background: var(--primary-active);
+    }
+
+    .btn-generate:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--fg-muted);
+    }
+
+    .kbd-shortcut {
+      font-size: 0.62rem;
+      background: rgba(0, 0, 0, 0.25);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 3px;
+      padding: 1px 5px;
+      color: rgba(255, 255, 255, 0.8);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Spinner */
+    .spinner {
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: #ffffff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Column 2: Player & Monitor Card */
+    .card-player {
+      gap: 7px;
+    }
+
+    .player-meta-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+      height: 22px;
+    }
+
+    .badge-pill {
+      font-size: 0.62rem;
+      font-weight: 600;
+      padding: 1px 7px;
+      border-radius: 999px;
+      margin-left: 6px;
+      letter-spacing: 0.02em;
+    }
+
+    .badge-voice {
+      background: var(--primary-soft);
+      color: var(--primary-light);
+      border: 1px solid rgba(59, 130, 246, 0.25);
+    }
+
+    .badge-engine {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--fg-muted);
+      border: 1px solid var(--border);
+    }
+
+    /* Waveform Container */
+    .waveform-wrap {
+      flex: 1;
+      min-height: 75px;
+      background: #0d131f;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .waveform-wrap canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .waveform-cursor {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      width: 0%;
+      background: rgba(59, 130, 246, 0.12);
+      border-right: 2px solid var(--primary-light);
+      pointer-events: none;
+      transition: width 0.03s linear;
+    }
+
+    /* Playback Strip */
+    .playback-strip {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: #0d131f;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 6px 10px;
+      flex-shrink: 0;
+    }
+
+    .btn-play {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: none;
+      background: var(--primary-hover);
+      color: #ffffff;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      transition: background var(--transition);
+      flex-shrink: 0;
+    }
+
+    .btn-play:hover { background: var(--primary-active); }
+    .btn-play svg { width: 13px; height: 13px; fill: currentColor; }
+
+    .btn-secondary {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--fg-muted);
+      border-radius: 6px;
+      padding: 5px 7px;
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+    }
+
+    .btn-secondary:hover { background: rgba(255, 255, 255, 0.04); color: var(--fg); }
+    .btn-secondary svg { width: 13px; height: 13px; stroke: currentColor; }
+
+    .time-readout {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.76rem;
+      font-weight: 500;
+      color: var(--fg);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .btn-download-wav {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 10px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xs);
+      color: var(--fg);
+      font-family: inherit;
+      font-size: 0.72rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+
+    .btn-download-wav:hover {
+      background: var(--primary-soft);
+      border-color: rgba(59, 130, 246, 0.3);
+      color: var(--primary-light);
+    }
+
+    /* Metrics Grid */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 5px;
+      flex-shrink: 0;
+    }
+
+    .metric-cell {
+      background: #0d131f;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xs);
+      padding: 5px 7px;
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+    }
+
+    .m-lbl {
+      font-size: 0.56rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--fg-subtle);
+      font-weight: 600;
+    }
+
+    .m-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--fg);
+    }
+
+    .m-val.green { color: var(--primary-light); }
+    .m-val.cyan { color: #38bdf8; }
+
+    /* Engine Footer Note */
+    .engine-footer-note {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 4px 8px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px dashed var(--border);
+      border-radius: var(--radius-xs);
+      font-size: 0.65rem;
+      color: var(--fg-muted);
+      flex-shrink: 0;
+    }
+
+    /* Toast Notification */
+    #toast {
+      position: fixed;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      z-index: 1000;
+      padding: 6px 14px;
+      background: #1e293b;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      color: var(--fg);
+      font-size: 0.74rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      transition: transform 0.2s ease;
+      pointer-events: none;
+    }
+
+    #toast.show { transform: translateX(-50%) translateY(0); }
+    #toast.success { border-color: rgba(59, 130, 246, 0.4); }
+    #toast.info { border-color: rgba(59, 130, 246, 0.4); }
+    #toast.danger { border-color: rgba(239, 68, 68, 0.4); }
+
+    #toast .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--primary);
+    }
+    #toast.info .dot { background: var(--primary); }
+    #toast.danger .dot { background: var(--danger); }
+
+    /* Responsive for small screens / mobile */
+    @media (max-width: 768px) {
+      html, body { overflow-y: auto; height: auto; max-height: none; }
+      .studio-viewport {
+        grid-template-columns: 1fr;
+        height: auto;
+        max-height: none;
+        overflow: visible;
+        padding: 8px;
+      }
+      .studio-col { height: auto; overflow: visible; }
+      .textarea-box { min-height: 100px; }
+      .metrics-grid { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <a href="./" class="brand">
+      <div class="brand-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14.5v-9l6 4.5-6 4.5z"/></svg>
+      </div>
+      <div class="brand-title">
+        fast-tiny-tts
+        <span class="brand-badge">24 kHz</span>
+        <span class="brand-tag">4.5M ONNX</span>
+      </div>
+    </a>
+
+    <!-- Engine Mode Toggle -->
+    <div class="engine-switcher">
+      <button type="button" class="engine-btn" id="btnModeBun" title="Inferencia ultra rápida desde el servidor local Bun (Node / Bun ONNX)">
+        <span>⚡</span> Servidor Bun
+      </button>
+      <button type="button" class="engine-btn active" id="btnModeWeb" title="Inferencia 100% cliente en tu navegador via WebAssembly">
+        <span>🌐</span> Web (Navegador)
+      </button>
+    </div>
+
+    <!-- Status Badge & Github -->
+    <div class="header-actions">
+      <div class="status-badge" id="statusBadge">
+        <div class="status-dot"></div>
+        <span id="statusText">Listo</span>
+      </div>
+      <a href="https://github.com/edison-manrique/fast-tiny-tts" target="_blank" rel="noopener noreferrer" class="github-link" title="Ver código en GitHub">
+        <svg viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+        GitHub
+      </a>
+    </div>
+  </header>
+
+  <!-- Fullscreen Studio Viewport (100vh) -->
+  <div class="studio-viewport">
+    <!-- Col 1: Text & Acoustic Synthesis Controls -->
+    <div class="studio-col">
+      <div class="studio-card card-editor">
+        <div class="card-header-row">
+          <span class="card-label">Prompt Editor</span>
+          <div class="input-stats">
+            <span id="charCount">0 c</span>
+            <span>·</span>
+            <span id="wordCount">0 p</span>
+            <span>·</span>
+            <button class="btn-clear" id="btnClear" type="button">Borrar</button>
+          </div>
+        </div>
+
+        <div class="textarea-box">
+          <textarea id="textInput" placeholder="Escribe tu texto en inglés aquí...">In Q4, our fast tts engine boosted accuracy by 15.5% with a total budget of US$ 320,000 for 175,000 units.</textarea>
+        </div>
+
+        <!-- Preset Chips -->
+        <div class="presets-row">
+          <button class="preset-pill" data-t="BIP-340 Schnorr signatures, and Argon2id key derivations. ~4.5M parameters, 17.6 MB ONNX model, RTF and PCM.">🔐 Crypto & Tech (~4.5M, Argon2id)</button>
+          <button class="preset-pill" data-t="Dr. Patel paid $12.99 for 3 tickets on 3/14 — that's 40% off the usual price.">🎟️ Dr. & 3/14 ($12.99)</button>
+          <button class="preset-pill" data-t="In Q4, our fast tts engine boosted accuracy by 15.5% with a total budget of US$ 320,000 for 175,000 units.">📊 Q4 & % (15.5%)</button>
+          <button class="preset-pill" data-t="The total contract for Q1 through Q4 is US$ 320,000 for 175,000 units delivered on time.">💰 Finanzas (US$ 320k)</button>
+          <button class="preset-pill" data-t="We evaluated Q2 and Q3 revenue, reporting 24.8% growth and $1,250.50 savings.">🏷️ Precios ($1,250.50)</button>
+          <button class="preset-pill" data-t="We strictly evaluate RTF latency, acoustic accuracy, and real-time synthesis performance.">⚡ Benchmark</button>
+          <button class="preset-pill" data-t="Hello! Welcome to fast tiny tts, an ultra-fast text to speech engine.">👋 Bienvenida</button>
+        </div>
+
+        <!-- Voice & Sliders Grid -->
+        <div class="modulation-grid">
+          <!-- Voice Selector -->
+          <div class="voice-select-box">
+            <span class="card-label">Voz</span>
+            <div class="voice-buttons">
+              <button type="button" class="voice-btn active" id="voiceF2" data-voice="F2">
+                <span class="voice-btn-name">F2</span>
+                <span class="voice-btn-sub">Femenina</span>
+              </button>
+              <button type="button" class="voice-btn" id="voiceM2" data-voice="M2">
+                <span class="voice-btn-name">M2</span>
+                <span class="voice-btn-sub">Masculina</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Sliders -->
+          <div class="sliders-box">
+            <!-- Speed -->
+            <div class="slider-item">
+              <div class="slider-header">
+                <span>Velocidad</span>
+                <span class="slider-val" id="speedVal">1.0×</span>
+              </div>
+              <input type="range" id="sliderSpeed" min="0.5" max="2.0" step="0.05" value="1.0" />
+            </div>
+
+            <!-- Pitch Shift -->
+            <div class="slider-item">
+              <div class="slider-header">
+                <span>Tono</span>
+                <span class="slider-val" id="pitchVal">0.0</span>
+              </div>
+              <input type="range" id="sliderPitch" min="-1.0" max="1.0" step="0.1" value="0.0" />
+            </div>
+
+            <!-- Pitch Range -->
+            <div class="slider-item">
+              <div class="slider-header">
+                <span>Rango</span>
+                <span class="slider-val" id="rangeVal">1.0</span>
+              </div>
+              <input type="range" id="sliderRange" min="0.0" max="2.0" step="0.1" value="1.0" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Primary Generate Action -->
+        <button class="btn-generate" id="btnGenerate">
+          <span class="spinner" id="btnSpinner" style="display:none"></span>
+          <span id="btnIcon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          </span>
+          <span id="btnLabel">Generar Audio</span>
+          <span class="kbd-shortcut">Ctrl+↵</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Col 2: Player & Metrics Studio -->
+    <div class="studio-col">
+      <div class="studio-card card-player">
+        <div class="player-meta-bar">
+          <div style="display:flex;align-items:center;">
+            <span class="card-label">Studio Monitor</span>
+            <span class="badge-pill badge-voice" id="tagVoice">F2</span>
+            <span class="badge-pill badge-engine" id="tagEngine">🌐 Web ONNX</span>
+          </div>
+          <span id="audioSummary" style="font-size:0.68rem;color:var(--fg-muted);">24 kHz · Mono</span>
+        </div>
+
+        <!-- Waveform Visualizer -->
+        <div class="waveform-wrap" id="waveformBox" title="Clic para avanzar o retroceder">
+          <canvas id="waveCanvas"></canvas>
+          <div class="waveform-cursor" id="waveformCursor"></div>
+        </div>
+
+        <!-- Controls Strip -->
+        <div class="playback-strip">
+          <button type="button" class="btn-play" id="btnPlayPause" title="Reproducir / Pausar (Espacio)">
+            <svg id="playIcon" viewBox="0 0 24 24"><polygon points="6 4 20 12 6 20 6 4"/></svg>
+            <svg id="pauseIcon" viewBox="0 0 24 24" style="display:none"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+          </button>
+
+          <button type="button" class="btn-secondary" id="btnStop" title="Detener (Esc)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="5" width="14" height="14" rx="2"/></svg>
+          </button>
+
+          <div class="time-readout">
+            <span id="timeCurrent">00:00.0</span>
+            <span style="color:var(--fg-subtle);margin:0 2px;">/</span>
+            <span id="timeTotal">00:00.0</span>
+          </div>
+
+          <button type="button" class="btn-download-wav" id="btnDownload" title="Descargar WAV 24kHz">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Descargar WAV
+          </button>
+        </div>
+
+        <!-- Metrics Grid -->
+        <div class="metrics-grid">
+          <div class="metric-cell">
+            <span class="m-lbl">Inferencia</span>
+            <span class="m-val green" id="mInference">— ms</span>
+          </div>
+          <div class="metric-cell">
+            <span class="m-lbl">RTF (Velocidad)</span>
+            <span class="m-val cyan" id="mRTF">—</span>
+          </div>
+          <div class="metric-cell">
+            <span class="m-lbl">Duración</span>
+            <span class="m-val" id="mDuration">— s</span>
+          </div>
+          <div class="metric-cell">
+            <span class="m-lbl">Palabras</span>
+            <span class="m-val" id="mTokens">—</span>
+          </div>
+        </div>
+
+        <!-- Footer Note -->
+        <div class="engine-footer-note">
+          <span id="activeEngineDesc">🌐 Inferencia 100% cliente (ONNX WebAssembly)</span>
+          <span style="font-size:0.64rem;color:var(--fg-subtle);">4.5M params · ONNX</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <audio id="nativeAudio"></audio>
+
+  <!-- Toast -->
+  <div id="toast">
+    <div class="dot"></div>
+    <span id="toastMsg"></span>
+  </div>
+
+  <script type="module">
+    import { FastTinyTTS, encodeWav } from './dist/web/fast-tiny-tts.js?v=10';
+
+    // State
+    const isStaticHost = window.location.hostname.includes('github.io') || window.location.protocol === 'file:';
+
+    const state = {
+      mode: 'web', // Default to web engine for clean standalone execution
+      voice: 'F2',
+      speed: 1.0,
+      pitchShift: 0.0,
+      pitchRange: 1.0,
+      isSynthesizing: false,
+      isPlaying: false,
+      bunAvailable: false,
+      webTtsInstance: null,
+      webLoading: false,
+      audioBuffer: null,
+      audioUrl: null,
+      audioSamples: null,
+      duration: 0,
+      startTime: 0,
+      pauseOffset: 0,
+    };
+
+    // DOM Elements
+    const els = {
+      btnModeBun: document.getElementById('btnModeBun'),
+      btnModeWeb: document.getElementById('btnModeWeb'),
+      statusBadge: document.getElementById('statusBadge'),
+      statusText: document.getElementById('statusText'),
+      activeEngineDesc: document.getElementById('activeEngineDesc'),
+      textInput: document.getElementById('textInput'),
+      charCount: document.getElementById('charCount'),
+      wordCount: document.getElementById('wordCount'),
+      btnClear: document.getElementById('btnClear'),
+      voiceF2: document.getElementById('voiceF2'),
+      voiceM2: document.getElementById('voiceM2'),
+      sliderSpeed: document.getElementById('sliderSpeed'),
+      speedVal: document.getElementById('speedVal'),
+      sliderPitch: document.getElementById('sliderPitch'),
+      pitchVal: document.getElementById('pitchVal'),
+      sliderRange: document.getElementById('sliderRange'),
+      rangeVal: document.getElementById('rangeVal'),
+      btnGenerate: document.getElementById('btnGenerate'),
+      btnLabel: document.getElementById('btnLabel'),
+      btnIcon: document.getElementById('btnIcon'),
+      btnSpinner: document.getElementById('btnSpinner'),
+      waveCanvas: document.getElementById('waveCanvas'),
+      waveformBox: document.getElementById('waveformBox'),
+      waveformCursor: document.getElementById('waveformCursor'),
+      btnPlayPause: document.getElementById('btnPlayPause'),
+      playIcon: document.getElementById('playIcon'),
+      pauseIcon: document.getElementById('pauseIcon'),
+      btnStop: document.getElementById('btnStop'),
+      btnDownload: document.getElementById('btnDownload'),
+      timeCurrent: document.getElementById('timeCurrent'),
+      timeTotal: document.getElementById('timeTotal'),
+      tagVoice: document.getElementById('tagVoice'),
+      tagEngine: document.getElementById('tagEngine'),
+      audioSummary: document.getElementById('audioSummary'),
+      mInference: document.getElementById('mInference'),
+      mRTF: document.getElementById('mRTF'),
+      mDuration: document.getElementById('mDuration'),
+      mTokens: document.getElementById('mTokens'),
+      nativeAudio: document.getElementById('nativeAudio'),
+      toast: document.getElementById('toast'),
+      toastMsg: document.getElementById('toastMsg'),
+    };
+
+    let audioCtx = null;
+    let audioSourceNode = null;
+    let analyserNode = null;
+    let animFrameId = null;
+
+    function getAudioContext() {
+      if (!audioCtx) {
+        const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new AudioCtxClass();
+        analyserNode = audioCtx.createAnalyser();
+        analyserNode.fftSize = 256;
+        analyserNode.smoothingTimeConstant = 0.8;
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      return audioCtx;
+    }
+
+    let toastTimer = null;
+    function showToast(msg, type = 'info') {
+      if (toastTimer) clearTimeout(toastTimer);
+      els.toastMsg.textContent = msg;
+      els.toast.className = type + ' show';
+      toastTimer = setTimeout(() => {
+        els.toast.classList.remove('show');
+      }, 2400);
+    }
+
+    function fmtTime(sec) {
+      if (isNaN(sec) || sec < 0) sec = 0;
+      const m = Math.floor(sec / 60);
+      const s = Math.floor(sec % 60);
+      const ds = Math.floor((sec % 1) * 10);
+      return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}.${ds}`;
+    }
+
+    function updateTextCounters() {
+      const text = els.textInput.value;
+      els.charCount.textContent = `${text.length} c`;
+      const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+      els.wordCount.textContent = `${words} p`;
+    }
+
+    els.textInput.addEventListener('input', updateTextCounters);
+    updateTextCounters();
+
+    els.btnClear.onclick = () => {
+      els.textInput.value = '';
+      els.textInput.focus();
+      updateTextCounters();
+    };
+
+    // Preset pills
+    document.querySelectorAll('.preset-pill').forEach(pill => {
+      pill.onclick = () => {
+        els.textInput.value = pill.dataset.t;
+        updateTextCounters();
+        showToast('Ejemplo cargado', 'info');
+      };
+    });
+
+    const presetsRow = document.querySelector('.presets-row');
+    if (presetsRow) {
+      presetsRow.addEventListener('wheel', (e) => {
+        if (e.deltaY !== 0) {
+          e.preventDefault();
+          presetsRow.scrollLeft += e.deltaY;
+        }
+      }, { passive: false });
+    }
+
+    // Voice switching
+    function setVoice(v) {
+      state.voice = v;
+      els.voiceF2.classList.toggle('active', v === 'F2');
+      els.voiceM2.classList.toggle('active', v === 'M2');
+      els.tagVoice.textContent = v;
+    }
+
+    els.voiceF2.onclick = () => setVoice('F2');
+    els.voiceM2.onclick = () => setVoice('M2');
+
+    // Sliders
+    els.sliderSpeed.oninput = () => {
+      state.speed = parseFloat(els.sliderSpeed.value);
+      els.speedVal.textContent = `${state.speed.toFixed(2)}×`;
+    };
+
+    els.sliderPitch.oninput = () => {
+      state.pitchShift = parseFloat(els.sliderPitch.value);
+      els.pitchVal.textContent = state.pitchShift > 0 ? `+${state.pitchShift.toFixed(1)}` : state.pitchShift.toFixed(1);
+    };
+
+    els.sliderRange.oninput = () => {
+      state.pitchRange = parseFloat(els.sliderRange.value);
+      els.rangeVal.textContent = state.pitchRange.toFixed(1);
+    };
+
+    // Engine switcher
+    function setEngineMode(mode) {
+      if (mode === 'bun' && isStaticHost) {
+        showToast('Servidor Bun requiere ejecución local (bun run dev). Usando motor Web.', 'info');
+        mode = 'web';
+      }
+
+      state.mode = mode;
+      els.btnModeBun.classList.toggle('active', mode === 'bun');
+      els.btnModeWeb.classList.toggle('active', mode === 'web');
+
+      if (mode === 'bun') {
+        els.activeEngineDesc.textContent = '⚡ Inferencia nativa acelerada (Bun/Node)';
+        els.statusText.textContent = state.bunAvailable ? 'Bun Listo' : 'Comprobando Bun…';
+        els.tagEngine.textContent = '⚡ Bun API';
+        showToast('Modo Servidor Bun activado', 'info');
+      } else {
+        els.activeEngineDesc.textContent = '🌐 Inferencia 100% cliente (ONNX WebAssembly)';
+        els.statusText.textContent = state.webTtsInstance ? 'Web Listo' : 'Web (Cliente)';
+        els.tagEngine.textContent = '🌐 Web ONNX';
+        initWebEngineIfNeeded();
+      }
+    }
+
+    els.btnModeBun.onclick = () => setEngineMode('bun');
+    els.btnModeWeb.onclick = () => setEngineMode('web');
+
+    // Check Bun availability
+    async function checkBunServer() {
+      if (isStaticHost) {
+        state.bunAvailable = false;
+        return false;
+      }
+      try {
+        const res = await fetch('./api/voices', { method: 'GET', signal: AbortSignal.timeout(1800) });
+        if (res.ok) {
+          state.bunAvailable = true;
+          els.statusBadge.className = 'status-badge';
+          if (state.mode === 'bun') els.statusText.textContent = 'Bun Listo';
+          return true;
+        }
+      } catch (e) {}
+      state.bunAvailable = false;
+      return false;
+    }
+
+    // Init Web Engine via Official Worker (Pyodide + dizione + WebGPU/WASM)
+    let workerEngine = null;
+    let workerReady = false;
+    let workerSpeakId = 0;
+    let workerPendingResolve = null;
+    let workerPendingReject = null;
+
+    function initWebEngineIfNeeded() {
+      if (workerEngine) return;
+      els.statusBadge.className = 'status-badge loading';
+      els.statusText.textContent = 'Iniciando motor Web…';
+
+      try {
+        workerEngine = new Worker('./engine.js');
+      } catch (e) {
+        console.warn('Worker initialization failed:', e);
+        els.statusBadge.className = 'status-badge error';
+        els.statusText.textContent = 'Worker no soportado';
+        return;
+      }
+
+      workerEngine.onmessage = (event) => {
+        const msg = event.data;
+        if (msg.type === 'status') {
+          els.statusBadge.className = 'status-badge loading';
+          els.statusText.textContent = msg.message;
+        } else if (msg.type === 'ready') {
+          workerReady = true;
+          state.webTtsInstance = true;
+          const epName = (msg.ep || 'wasm').toUpperCase();
+          els.statusBadge.className = 'status-badge';
+          els.statusText.textContent = `Web ${epName} Listo`;
+          els.tagEngine.textContent = `🌐 Web (${epName})`;
+          showToast(`Motor Web preparado con fonemizador oficial (${epName})`, 'success');
+        } else if (msg.type === 'done') {
+          if (workerPendingResolve) {
+            workerPendingResolve(msg);
+            workerPendingResolve = null;
+            workerPendingReject = null;
+          }
+        } else if (msg.type === 'error') {
+          if (workerPendingReject) {
+            workerPendingReject(new Error(msg.message));
+            workerPendingResolve = null;
+            workerPendingReject = null;
+          } else {
+            showToast('Error motor: ' + msg.message, 'danger');
+            els.statusBadge.className = 'status-badge error';
+            els.statusText.textContent = 'Error motor';
+          }
+        }
+      };
+
+      workerEngine.onerror = (e) => {
+        console.error('Worker error:', e);
+        if (workerPendingReject) {
+          workerPendingReject(new Error(e.message || 'Error en Web Worker'));
+          workerPendingResolve = null;
+          workerPendingReject = null;
+        }
+      };
+
+      workerEngine.postMessage({ type: 'load' });
+    }
+
+    // Waveform Drawing & Visualizer (Clean Soft Blue)
+    function drawIdleWaveform() {
+      const canvas = els.waveCanvas;
+      const dpr = window.devicePixelRatio || 1;
+      const w = canvas.clientWidth;
+      const h = canvas.clientHeight;
+      if (!w || !h) return;
+
+      canvas.width = w * dpr;
+      canvas.height = h * dpr;
+      const ctx = canvas.getContext('2d');
+      ctx.scale(dpr, dpr);
+
+      ctx.clearRect(0, 0, w, h);
+      ctx.strokeStyle = 'rgba(59, 130, 246, 0.25)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(0, h / 2);
+      ctx.lineTo(w, h / 2);
+      ctx.stroke();
+
+      const numBars = Math.floor(w / 5);
+      for (let i = 0; i < numBars; i++) {
+        const barH = 3 + Math.sin(i * 0.18) * 3;
+        const x = i * 5 + 1;
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
+        ctx.fillRect(x, (h - barH) / 2, 2.5, barH);
+      }
+    }
+
+    function renderAudioEnvelope(samples) {
+      const canvas = els.waveCanvas;
+      const dpr = window.devicePixelRatio || 1;
+      const w = canvas.clientWidth;
+      const h = canvas.clientHeight;
+      if (!w || !h || !samples) return;
+
+      canvas.width = w * dpr;
+      canvas.height = h * dpr;
+      const ctx = canvas.getContext('2d');
+      ctx.scale(dpr, dpr);
+
+      ctx.clearRect(0, 0, w, h);
+
+      const numBars = Math.floor(w / 4);
+      const step = Math.floor(samples.length / numBars);
+      const barW = 2.5;
+      const midY = h / 2;
+
+      for (let i = 0; i < numBars; i++) {
+        let max = 0;
+        const start = i * step;
+        const end = Math.min(start + step, samples.length);
+        for (let j = start; j < end; j++) {
+          const v = Math.abs(samples[j]);
+          if (v > max) max = v;
+        }
+
+        const barH = Math.max(2, max * (h * 0.85));
+        const x = i * 4 + 1;
+        const y = midY - barH / 2;
+
+        ctx.fillStyle = '#3b82f6';
+        ctx.fillRect(x, y, barW, barH);
+      }
+    }
+
+    // Clean Subtle Audio Spectrum during playback
+    function renderLiveSpectrum() {
+      if (!state.isPlaying || !analyserNode) return;
+      const canvas = els.waveCanvas;
+      const dpr = window.devicePixelRatio || 1;
+      const w = canvas.clientWidth;
+      const h = canvas.clientHeight;
+      if (!w || !h) return;
+
+      const ctx = canvas.getContext('2d');
+      const bufferLength = analyserNode.frequencyBinCount;
+      const dataArray = new Uint8Array(bufferLength);
+      analyserNode.getByteFrequencyData(dataArray);
+
+      // Base envelope
+      renderAudioEnvelope(state.audioSamples);
+
+      // Clean soft blue overlay bars
+      const barCount = Math.min(48, Math.floor(w / 8));
+      const barWidth = 4;
+      const gap = (w - (barCount * barWidth)) / (barCount + 1);
+
+      for (let i = 0; i < barCount; i++) {
+        const val = dataArray[i * 2] || 0;
+        const barHeight = (val / 255) * (h * 0.7);
+        const x = gap + i * (barWidth + gap);
+        const y = h - barHeight - 2;
+
+        ctx.fillStyle = 'rgba(96, 165, 250, 0.75)';
+        ctx.fillRect(x, y, barWidth, barHeight);
+      }
+    }
+
+    // Playback Engine
+    function stopPlayback() {
+      if (audioSourceNode) {
+        try { audioSourceNode.stop(); audioSourceNode.disconnect(); } catch (e) {}
+        audioSourceNode = null;
+      }
+      if (animFrameId) {
+        cancelAnimationFrame(animFrameId);
+        animFrameId = null;
+      }
+      state.isPlaying = false;
+      state.pauseOffset = 0;
+      els.playIcon.style.display = 'block';
+      els.pauseIcon.style.display = 'none';
+      els.waveformCursor.style.width = '0%';
+      els.timeCurrent.textContent = '00:00.0';
+      if (state.audioSamples) {
+        renderAudioEnvelope(state.audioSamples);
+      } else {
+        drawIdleWaveform();
+      }
+    }
+
+    function startPlayback(offsetSeconds = 0) {
+      if (!state.audioBuffer) return;
+      const ctx = getAudioContext();
+
+      if (audioSourceNode) {
+        try { audioSourceNode.stop(); audioSourceNode.disconnect(); } catch (e) {}
+      }
+
+      audioSourceNode = ctx.createBufferSource();
+      audioSourceNode.buffer = state.audioBuffer;
+      audioSourceNode.connect(analyserNode);
+      analyserNode.connect(ctx.destination);
+
+      state.startTime = ctx.currentTime - offsetSeconds;
+      state.pauseOffset = offsetSeconds;
+      audioSourceNode.start(0, offsetSeconds);
+      state.isPlaying = true;
+
+      els.playIcon.style.display = 'none';
+      els.pauseIcon.style.display = 'block';
+
+      audioSourceNode.onended = () => {
+        if (state.isPlaying) stopPlayback();
+      };
+
+      animatePlayback();
+    }
+
+    function pausePlayback() {
+      if (!state.isPlaying) return;
+      const ctx = getAudioContext();
+      state.pauseOffset = ctx.currentTime - state.startTime;
+      if (audioSourceNode) {
+        try { audioSourceNode.stop(); audioSourceNode.disconnect(); } catch (e) {}
+        audioSourceNode = null;
+      }
+      if (animFrameId) {
+        cancelAnimationFrame(animFrameId);
+        animFrameId = null;
+      }
+      state.isPlaying = false;
+      els.playIcon.style.display = 'block';
+      els.pauseIcon.style.display = 'none';
+      if (state.audioSamples) {
+        renderAudioEnvelope(state.audioSamples);
+      }
+    }
+
+    function togglePlayPause() {
+      if (!state.audioBuffer) return;
+      if (state.isPlaying) {
+        pausePlayback();
+      } else {
+        const offset = state.pauseOffset >= state.duration ? 0 : state.pauseOffset;
+        startPlayback(offset);
+      }
+    }
+
+    els.btnPlayPause.onclick = togglePlayPause;
+    els.btnStop.onclick = stopPlayback;
+
+    els.waveformBox.onclick = (e) => {
+      if (!state.audioBuffer || !state.duration) return;
+      const rect = els.waveformBox.getBoundingClientRect();
+      const frac = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+      const targetSec = frac * state.duration;
+
+      if (state.isPlaying) {
+        startPlayback(targetSec);
+      } else {
+        state.pauseOffset = targetSec;
+        els.waveformCursor.style.width = (frac * 100) + '%';
+        els.timeCurrent.textContent = fmtTime(targetSec);
+      }
+    };
+
+    function animatePlayback() {
+      if (!state.isPlaying) return;
+      const ctx = getAudioContext();
+      const current = ctx.currentTime - state.startTime;
+
+      if (current >= state.duration) {
+        stopPlayback();
+        return;
+      }
+
+      const progressFrac = Math.min(1, current / state.duration);
+      els.waveformCursor.style.width = (progressFrac * 100) + '%';
+      els.timeCurrent.textContent = fmtTime(current);
+
+      renderLiveSpectrum();
+
+      animFrameId = requestAnimationFrame(animatePlayback);
+    }
+
+    // Synthesis Trigger
+    els.btnGenerate.onclick = async () => {
+      const text = els.textInput.value.trim();
+      if (!text) {
+        showToast('Escribe texto para generar', 'danger');
+        els.textInput.focus();
+        return;
+      }
+
+      getAudioContext();
+
+      state.isSynthesizing = true;
+      els.btnGenerate.disabled = true;
+      els.btnIcon.style.display = 'none';
+      els.btnSpinner.style.display = 'inline-block';
+      els.btnLabel.textContent = 'Sintetizando…';
+      els.statusBadge.className = 'status-badge loading';
+      els.statusText.textContent = state.mode === 'bun' ? 'Bun sintetizando…' : 'ONNX Web infiriendo…';
+
+      stopPlayback();
+
+      try {
+        if (state.mode === 'bun') {
+          await synthesizeViaBun(text);
+        } else {
+          await synthesizeViaWeb(text);
+        }
+        els.statusBadge.className = 'status-badge';
+        els.statusText.textContent = 'Listo';
+      } catch (err) {
+        console.error('[Synthesize Error]:', err);
+        showToast('Error: ' + err.message, 'danger');
+        els.statusBadge.className = 'status-badge error';
+        els.statusText.textContent = 'Error';
+      } finally {
+        state.isSynthesizing = false;
+        els.btnGenerate.disabled = false;
+        els.btnIcon.style.display = 'inline-block';
+        els.btnSpinner.style.display = 'none';
+        els.btnLabel.textContent = 'Generar Audio';
+      }
+    };
+
+    // Mode 1: Bun
+    async function synthesizeViaBun(text) {
+      const t0 = performance.now();
+      const res = await fetch('./api/synthesize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text,
+          voice: state.voice,
+          speed: state.speed,
+          pitch_shift: state.pitchShift,
+          pitch_range: state.pitchRange,
+        }),
+      });
+
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => ({}));
+        throw new Error(errJson.error || `HTTP ${res.status}`);
+      }
+
+      const clientLatency = performance.now() - t0;
+      const wavArrayBuffer = await res.arrayBuffer();
+
+      const serverInferenceMs = parseFloat(res.headers.get('X-Inference-Ms')) || clientLatency;
+      const audioSeconds = parseFloat(res.headers.get('X-Audio-Seconds')) || (wavArrayBuffer.byteLength / 48000);
+      const rtf = parseFloat(res.headers.get('X-RTF')) || (serverInferenceMs / 1000 / audioSeconds);
+      const respVoice = res.headers.get('X-Voice') || state.voice;
+
+      const ctx = getAudioContext();
+      const decodedBuffer = await ctx.decodeAudioData(wavArrayBuffer.slice(0));
+
+      const samples = decodedBuffer.getChannelData(0);
+      state.audioSamples = samples;
+      state.audioBuffer = decodedBuffer;
+      state.duration = decodedBuffer.duration;
+
+      const wavBlob = new Blob([wavArrayBuffer], { type: 'audio/wav' });
+      if (state.audioUrl) URL.revokeObjectURL(state.audioUrl);
+      state.audioUrl = URL.createObjectURL(wavBlob);
+
+      updatePlayerMonitor({
+        voice: respVoice,
+        engine: '⚡ Bun API',
+        inferenceMs: serverInferenceMs,
+        audioSeconds: state.duration,
+        rtf: rtf,
+        words: text.trim().split(/\s+/).length,
+      });
+
+      showToast(`Audio generado en ${serverInferenceMs.toFixed(0)} ms (Bun)`, 'success');
+      startPlayback(0);
+    }
+
+    // Mode 2: Web Client (Official Pyodide + dizione + WebGPU/WASM engine)
+    async function synthesizeViaWeb(text) {
+      if (!workerEngine) {
+        initWebEngineIfNeeded();
+      }
+
+      if (!workerReady) {
+        els.statusBadge.className = 'status-badge loading';
+        els.statusText.textContent = 'Preparando motor…';
+        await new Promise((resolve, reject) => {
+          const checkInterval = setInterval(() => {
+            if (workerReady) {
+              clearInterval(checkInterval);
+              resolve();
+            }
+          }, 100);
+          setTimeout(() => {
+            clearInterval(checkInterval);
+            if (!workerReady) reject(new Error('Tiempo de espera agotado al cargar el motor Web'));
+          }, 60000);
+        });
+      }
+
+      const id = ++workerSpeakId;
+      const res = await new Promise((resolve, reject) => {
+        workerPendingResolve = resolve;
+        workerPendingReject = reject;
+        workerEngine.postMessage({
+          type: 'speak',
+          id: id,
+          text: text,
+          voice: state.voice,
+          speed: state.speed,
+          pitchShift: state.pitchShift,
+          pitchRange: state.pitchRange
+        });
+      });
+
+      const ctx = getAudioContext();
+      const samples = res.audio;
+      const audioBuffer = ctx.createBuffer(1, samples.length, 24000);
+      audioBuffer.getChannelData(0).set(samples);
+
+      state.audioSamples = samples;
+      state.audioBuffer = audioBuffer;
+      state.duration = audioBuffer.duration;
+
+      const wavBytes = encodeWav(samples, { sampleRate: 24000, peak: 0.98 });
+      const wavBlob = new Blob([wavBytes.buffer], { type: 'audio/wav' });
+      if (state.audioUrl) URL.revokeObjectURL(state.audioUrl);
+      state.audioUrl = URL.createObjectURL(wavBlob);
+
+      const inferenceMs = (res.seconds || 0) * 1000;
+      const audioSeconds = res.audioSeconds || state.duration;
+      const rtf = res.rtf || (audioSeconds > 0 ? (inferenceMs / 1000 / audioSeconds) : 0);
+
+      updatePlayerMonitor({
+        voice: state.voice,
+        engine: els.tagEngine.textContent || '🌐 Web (WebGPU/WASM)',
+        inferenceMs: inferenceMs,
+        audioSeconds: audioSeconds,
+        rtf: rtf,
+        words: text.trim().split(/\s+/).length,
+      });
+
+      showToast(`Audio generado en ${inferenceMs.toFixed(0)} ms (Web)`, 'success');
+      startPlayback(0);
+    }
+
+    function updatePlayerMonitor(meta) {
+      els.tagVoice.textContent = meta.voice;
+      els.tagEngine.textContent = meta.engine;
+      els.audioSummary.textContent = `${meta.audioSeconds.toFixed(2)}s · 24 kHz · Mono`;
+      els.timeTotal.textContent = fmtTime(meta.audioSeconds);
+      els.mInference.textContent = `${meta.inferenceMs.toFixed(0)} ms`;
+      const speedup = meta.rtf > 0 ? (1 / meta.rtf).toFixed(0) : '—';
+      els.mRTF.textContent = `${meta.rtf.toFixed(3)}× (${speedup}×)`;
+      els.mDuration.textContent = `${meta.audioSeconds.toFixed(2)} s`;
+      els.mTokens.textContent = `${meta.words}`;
+
+      renderAudioEnvelope(state.audioSamples);
+    }
+
+    // Download WAV button
+    els.btnDownload.onclick = () => {
+      if (!state.audioUrl) {
+        showToast('Genera audio primero para descargarlo', 'info');
+        return;
+      }
+      const a = document.createElement('a');
+      a.href = state.audioUrl;
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+      a.download = `fast-tiny-tts_${state.voice}_${timestamp}.wav`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      showToast('WAV descargado', 'success');
+    };
+
+    // Keyboard Shortcuts
+    window.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        els.btnGenerate.click();
+      } else if (e.code === 'Space' && e.target !== els.textInput) {
+        e.preventDefault();
+        togglePlayPause();
+      } else if (e.key === 'Escape') {
+        stopPlayback();
+      }
+    });
+
+    // Window resize handler for waveform
+    window.addEventListener('resize', () => {
+      if (state.audioSamples) {
+        renderAudioEnvelope(state.audioSamples);
+      } else {
+        drawIdleWaveform();
+      }
+    });
+
+    // Initial engine check & startup
+    setTimeout(async () => {
+      setEngineMode('web');
+      drawIdleWaveform();
+      if (!isStaticHost) {
+        await checkBunServer();
+      }
+    }, 200);
+  </script>
+</body>
+</html>
