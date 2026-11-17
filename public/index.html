@@ -1050,7 +1050,7 @@
   </div>
 
   <script type="module">
-    import { FastTinyTTS, encodeWav } from './dist/web/fast-tiny-tts.js?v=9';
+    import { FastTinyTTS, encodeWav } from './dist/web/fast-tiny-tts.js?v=10';
 
     // State
     const isStaticHost = window.location.hostname.includes('github.io') || window.location.protocol === 'file:';
@@ -1264,31 +1264,69 @@
       return false;
     }
 
-    // Init Web Engine
-    async function initWebEngineIfNeeded() {
-      if (state.webTtsInstance || state.webLoading) return;
-      state.webLoading = true;
+    // Init Web Engine via Official Worker (Pyodide + dizione + WebGPU/WASM)
+    let workerEngine = null;
+    let workerReady = false;
+    let workerSpeakId = 0;
+    let workerPendingResolve = null;
+    let workerPendingReject = null;
+
+    function initWebEngineIfNeeded() {
+      if (workerEngine) return;
       els.statusBadge.className = 'status-badge loading';
-      els.statusText.textContent = 'Cargando ONNX Web…';
+      els.statusText.textContent = 'Iniciando motor Web…';
 
       try {
-        state.webTtsInstance = await FastTinyTTS.create({
-          modelPath: './dist/models/tiny-voca/model.onnx',
-          phonemizerPath: './dist/models/tiny-voca/phonemizer/lexicon.tsv',
-          configPath: './dist/models/tiny-voca/config.json',
-          wasmPath: isStaticHost ? 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.20.0/dist/' : './dist/onnxruntime-web/',
-        });
-        state.webLoading = false;
-        els.statusBadge.className = 'status-badge';
-        els.statusText.textContent = 'Web ONNX Listo';
-        showToast('Motor Web ONNX preparado para sintetizar', 'success');
-      } catch (err) {
-        console.error('[WebTTS Error]:', err);
-        state.webLoading = false;
+        workerEngine = new Worker('./engine.js');
+      } catch (e) {
+        console.warn('Worker initialization failed:', e);
         els.statusBadge.className = 'status-badge error';
-        els.statusText.textContent = 'Error modelo Web';
-        showToast('Error cargando modelo Web: ' + err.message, 'danger');
+        els.statusText.textContent = 'Worker no soportado';
+        return;
       }
+
+      workerEngine.onmessage = (event) => {
+        const msg = event.data;
+        if (msg.type === 'status') {
+          els.statusBadge.className = 'status-badge loading';
+          els.statusText.textContent = msg.message;
+        } else if (msg.type === 'ready') {
+          workerReady = true;
+          state.webTtsInstance = true;
+          const epName = (msg.ep || 'wasm').toUpperCase();
+          els.statusBadge.className = 'status-badge';
+          els.statusText.textContent = `Web ${epName} Listo`;
+          els.tagEngine.textContent = `🌐 Web (${epName})`;
+          showToast(`Motor Web preparado con fonemizador oficial (${epName})`, 'success');
+        } else if (msg.type === 'done') {
+          if (workerPendingResolve) {
+            workerPendingResolve(msg);
+            workerPendingResolve = null;
+            workerPendingReject = null;
+          }
+        } else if (msg.type === 'error') {
+          if (workerPendingReject) {
+            workerPendingReject(new Error(msg.message));
+            workerPendingResolve = null;
+            workerPendingReject = null;
+          } else {
+            showToast('Error motor: ' + msg.message, 'danger');
+            els.statusBadge.className = 'status-badge error';
+            els.statusText.textContent = 'Error motor';
+          }
+        }
+      };
+
+      workerEngine.onerror = (e) => {
+        console.error('Worker error:', e);
+        if (workerPendingReject) {
+          workerPendingReject(new Error(e.message || 'Error en Web Worker'));
+          workerPendingResolve = null;
+          workerPendingReject = null;
+        }
+      };
+
+      workerEngine.postMessage({ type: 'load' });
     }
 
     // Waveform Drawing & Visualizer (Clean Soft Blue)
@@ -1605,58 +1643,72 @@
       startPlayback(0);
     }
 
-    // Mode 2: Web Client
+    // Mode 2: Web Client (Official Pyodide + dizione + WebGPU/WASM engine)
     async function synthesizeViaWeb(text) {
-      if (!state.webTtsInstance) {
-        await initWebEngineIfNeeded();
+      if (!workerEngine) {
+        initWebEngineIfNeeded();
       }
 
-      if (!state.webTtsInstance) {
-        throw new Error('No se pudo inicializar la librería Web de ONNX');
+      if (!workerReady) {
+        els.statusBadge.className = 'status-badge loading';
+        els.statusText.textContent = 'Preparando motor…';
+        await new Promise((resolve, reject) => {
+          const checkInterval = setInterval(() => {
+            if (workerReady) {
+              clearInterval(checkInterval);
+              resolve();
+            }
+          }, 100);
+          setTimeout(() => {
+            clearInterval(checkInterval);
+            if (!workerReady) reject(new Error('Tiempo de espera agotado al cargar el motor Web'));
+          }, 60000);
+        });
       }
 
-      const res = await state.webTtsInstance.synthesize({
-        text,
-        voice: state.voice,
-        speed: state.speed,
-        pitchShift: state.pitchShift,
-        pitchRange: state.pitchRange,
+      const id = ++workerSpeakId;
+      const res = await new Promise((resolve, reject) => {
+        workerPendingResolve = resolve;
+        workerPendingReject = reject;
+        workerEngine.postMessage({
+          type: 'speak',
+          id: id,
+          text: text,
+          voice: state.voice,
+          speed: state.speed,
+          pitchShift: state.pitchShift,
+          pitchRange: state.pitchRange
+        });
       });
 
       const ctx = getAudioContext();
+      const samples = res.audio;
+      const audioBuffer = ctx.createBuffer(1, samples.length, 24000);
+      audioBuffer.getChannelData(0).set(samples);
 
-      let maxPeak = 0;
-      for (let i = 0; i < res.audio.length; i++) {
-        const v = Math.abs(res.audio[i]);
-        if (v > maxPeak) maxPeak = v;
-      }
-      const gain = maxPeak > 0 ? Math.min(1.0, 0.95 / maxPeak) : 1.0;
-
-      const audioBuffer = ctx.createBuffer(1, res.audio.length, res.sampleRate);
-      const channelData = audioBuffer.getChannelData(0);
-      for (let i = 0; i < res.audio.length; i++) {
-        channelData[i] = res.audio[i] * gain;
-      }
-
-      state.audioSamples = channelData;
+      state.audioSamples = samples;
       state.audioBuffer = audioBuffer;
       state.duration = audioBuffer.duration;
 
-      const wavBytes = encodeWav(res.audio, { sampleRate: res.sampleRate, peak: 0.95 });
+      const wavBytes = encodeWav(samples, { sampleRate: 24000, peak: 0.98 });
       const wavBlob = new Blob([wavBytes.buffer], { type: 'audio/wav' });
       if (state.audioUrl) URL.revokeObjectURL(state.audioUrl);
       state.audioUrl = URL.createObjectURL(wavBlob);
 
+      const inferenceMs = (res.seconds || 0) * 1000;
+      const audioSeconds = res.audioSeconds || state.duration;
+      const rtf = res.rtf || (audioSeconds > 0 ? (inferenceMs / 1000 / audioSeconds) : 0);
+
       updatePlayerMonitor({
         voice: state.voice,
-        engine: '🌐 Web ONNX',
-        inferenceMs: res.inferenceMs,
-        audioSeconds: res.audioSeconds,
-        rtf: res.rtf,
+        engine: els.tagEngine.textContent || '🌐 Web (WebGPU/WASM)',
+        inferenceMs: inferenceMs,
+        audioSeconds: audioSeconds,
+        rtf: rtf,
         words: text.trim().split(/\s+/).length,
       });
 
-      showToast(`Audio generado en ${res.inferenceMs.toFixed(0)} ms (Web)`, 'success');
+      showToast(`Audio generado en ${inferenceMs.toFixed(0)} ms (Web)`, 'success');
       startPlayback(0);
     }
 
